@@ -10,6 +10,7 @@ import { HedgingSimulator } from './components/HedgingSimulator';
 import { CustomMarketModal } from './components/CustomMarketModal';
 import { ExportModal } from './components/ExportModal';
 import { Footer } from './components/Footer';
+import { Analytics } from '@vercel/analytics/react';
 
 export function App() {
   const [markets, setMarkets] = useState<MacroMarket[]>(INITIAL_MACRO_MARKETS);
@@ -77,6 +78,8 @@ export function App() {
         onClose={() => setIsExportOpen(false)}
         market={currentMarket}
       />
+
+      <Analytics />
     </div>
   );
 }
