@@ -1,6 +1,6 @@
-# Macro Density — Institutional Kalshi Implied Distributions & Risk Discovery
+# Macro Density — Kalshi-Implied Macroeconomic Probability Densities
 
-**Macro Density** is an institutional-grade macroeconomic risk analytics platform that extracts model-free **Probability Density Functions (PDFs)**, **Cumulative Distribution Functions (CDFs)**, and **Statistical Moments** directly from **Kalshi prediction markets**.
+> **Kalshi-implied macroeconomic probability densities.** Extract model-free **Probability Density Functions (PDFs)**, **Cumulative Distribution Functions (CDFs)**, and **Statistical Moments** directly from **Kalshi prediction markets**.
 
 Inspired by the clean, authoritative design of **Augustus.com**, the platform features a white & Kalshi green aesthetic (`#00D26A`), high-contrast quantitative typography, and zero-friction data extraction tools.
 
