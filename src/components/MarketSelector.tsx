@@ -40,7 +40,7 @@ export const MarketSelector: React.FC<MarketSelectorProps> = ({
               className={`group text-left p-4 rounded-xl transition-all relative border-2 text-sm ${
                 isSelected
                   ? 'bg-white border-2 border-[#00D26A] ring-2 ring-[#00D26A]/20 shadow-md'
-                  : 'bg-white hover:bg-gray-50 border-2 border-gray-400 hover:border-gray-600 shadow-sm'
+                  : 'bg-white hover:bg-gray-50 border-2 border-black hover:border-gray-800 shadow-sm'
               }`}
             >
               {isSelected && (

@@ -26,7 +26,7 @@ export const MacroHeroCard: React.FC<MacroHeroCardProps> = ({ market }) => {
     : null;
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-gray-400 shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-6">
+    <div className="bg-white rounded-2xl border-2 border-black shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-6">
       {/* Top row: Title, Meta, and Kalshi Link */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-gray-200">
         <div>

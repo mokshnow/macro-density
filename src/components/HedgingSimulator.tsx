@@ -72,7 +72,7 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
   const totalHedgePremium = requiredContracts * contractCostDollars;
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-gray-400 shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-0">
+    <div className="bg-white rounded-2xl border-2 border-black shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-gray-200 mb-5">
         <h3 className="text-base font-extrabold text-gray-950 tracking-tight">
           Hedging
@@ -143,8 +143,8 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
       </div>
 
       {/* Output / Hedge Sizing Banner (Compact & Centered) */}
-      <div className="max-w-3xl mx-auto bg-[#F0FDF4] border-2 border-[#86EFAC] rounded-xl p-3 sm:px-4 sm:py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
-        <div className="flex items-center gap-3">
+      <div className="max-w-3xl mx-auto bg-[#F0FDF4] border-2 border-[#86EFAC] rounded-xl p-3 sm:px-4 sm:py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 shadow-2xs">
+        <div className="flex items-center gap-3 flex-1">
           <div className="p-1.5 rounded-lg bg-[#00D26A] text-white shrink-0 shadow-2xs">
             <CheckCircle className="w-4 h-4" />
           </div>
@@ -159,7 +159,10 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
           </div>
         </div>
 
-        <div className="flex items-center gap-5 border-t md:border-t-0 md:border-l-2 border-emerald-300 pt-2 md:pt-0 md:pl-5 shrink-0">
+        {/* Dedicated Centered Vertical Divider */}
+        <div className="hidden md:block w-[2px] h-10 bg-emerald-300 mx-2 shrink-0 self-center rounded-full" />
+
+        <div className="flex items-center gap-5 border-t md:border-t-0 border-emerald-300 pt-2 md:pt-0 shrink-0">
           <div>
             <div className="text-[10px] uppercase text-emerald-900 font-bold tracking-wider">
               Total Hedge Premium
