@@ -32,7 +32,7 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
   const totalHedgePremium = requiredContracts * contractCostDollars;
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-gray-300 shadow-sm p-5 sm:p-6 mb-6">
+    <div className="bg-white rounded-2xl border-2 border-gray-400 shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-gray-200 mb-5">
         <h3 className="text-base font-extrabold text-gray-950 tracking-tight">
           Hedging
@@ -42,8 +42,8 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
       {/* Simulator Inputs Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
         {/* Input 1: Portfolio Size */}
-        <div className="p-4 rounded-xl bg-white border-2 border-gray-300 shadow-2xs">
-          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+        <div className="p-4 rounded-xl bg-gray-50/70 border-2 border-gray-300 hover:border-gray-400 shadow-xs transition-colors">
+          <label className="block text-xs font-bold text-gray-800 mb-1.5">
             Portfolio Notional Value (USD)
           </label>
           <div className="relative">
@@ -55,13 +55,13 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
               value={portfolioSize}
               onChange={(e) => setPortfolioSize(Math.max(0, Number(e.target.value)))}
               step={500000}
-              className="w-full pl-6 pr-3 py-1.5 text-xs font-mono font-bold bg-gray-50 border-2 border-gray-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
+              className="w-full pl-6 pr-3 py-1.5 text-xs font-mono font-bold bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
             />
           </div>
         </div>
 
         {/* Input 2: Macro Sensitivity */}
-        <div className="p-4 rounded-xl bg-white border-2 border-gray-300 shadow-2xs">
+        <div className="p-4 rounded-xl bg-gray-50/70 border-2 border-gray-300 hover:border-gray-400 shadow-xs transition-colors">
           <label className="block text-xs font-bold text-gray-700 mb-1.5">
             Shock Sensitivity (Loss per +10bps)
           </label>
@@ -74,20 +74,20 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
               value={sensitivityBps * 1000}
               onChange={(e) => setSensitivityBps(Math.max(1, Number(e.target.value) / 1000))}
               step={5000}
-              className="w-full pl-6 pr-3 py-1.5 text-xs font-mono font-bold bg-gray-50 border-2 border-gray-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
+              className="w-full pl-6 pr-3 py-1.5 text-xs font-mono font-bold bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
             />
           </div>
         </div>
 
         {/* Input 3: Target Strike */}
-        <div className="p-4 rounded-xl bg-white border-2 border-gray-300 shadow-2xs">
+        <div className="p-4 rounded-xl bg-gray-50/70 border-2 border-gray-300 hover:border-gray-400 shadow-xs transition-colors">
           <label className="block text-xs font-bold text-gray-700 mb-1.5">
             Hedge Contract Strike
           </label>
           <select
             value={targetHedgeStrike}
             onChange={(e) => setTargetHedgeStrike(parseFloat(e.target.value))}
-            className="w-full px-3 py-1.5 text-xs font-mono font-bold bg-gray-50 border-2 border-gray-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
+            className="w-full px-3 py-1.5 text-xs font-mono font-bold bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
           >
             {market.contracts.map((c) => (
               <option key={c.ticker} value={c.floorStrike}>
@@ -99,7 +99,7 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
       </div>
 
       {/* Output / Hedge Sizing Banner */}
-      <div className="bg-[#F0FDF4] border-2 border-[#86EFAC] rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs">
+      <div className="bg-[#F0FDF4] border-2 border-[#86EFAC] rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
         <div className="flex items-start gap-3">
           <div className="p-2 rounded-lg bg-[#00D26A] text-white shrink-0 mt-0.5 shadow-xs">
             <CheckCircle className="w-4 h-4" />

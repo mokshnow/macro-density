@@ -8,16 +8,16 @@ interface RiskMomentsCardProps {
 
 export const RiskMomentsCard: React.FC<RiskMomentsCardProps> = ({ moments, unitSuffix }) => {
   return (
-    <div className="bg-white rounded-2xl border-2 border-gray-300 shadow-sm p-5 sm:p-6 mb-6">
+    <div className="bg-white rounded-2xl border-2 border-gray-400 shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-6">
       <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-5">
         <h3 className="text-base font-extrabold text-gray-950 tracking-tight">
-          Tail Risk
+          Distribution Moments
         </h3>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1: Expected Value & Median */}
-        <div className="p-4 rounded-xl bg-white border-2 border-gray-300 shadow-2xs flex flex-col justify-between">
+        <div className="p-4 rounded-xl bg-gray-50/70 border-2 border-gray-300 hover:border-gray-400 shadow-xs transition-colors flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
               Central Tendency
@@ -49,7 +49,7 @@ export const RiskMomentsCard: React.FC<RiskMomentsCardProps> = ({ moments, unitS
         </div>
 
         {/* Metric 2: Implied Volatility & IQR */}
-        <div className="p-4 rounded-xl bg-white border-2 border-gray-300 shadow-2xs flex flex-col justify-between">
+        <div className="p-4 rounded-xl bg-gray-50/70 border-2 border-gray-300 hover:border-gray-400 shadow-xs transition-colors flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
               Implied Dispersion
@@ -81,7 +81,7 @@ export const RiskMomentsCard: React.FC<RiskMomentsCardProps> = ({ moments, unitS
         </div>
 
         {/* Metric 3: Skewness & Kurtosis */}
-        <div className="p-4 rounded-xl bg-white border-2 border-gray-300 shadow-2xs flex flex-col justify-between">
+        <div className="p-4 rounded-xl bg-gray-50/70 border-2 border-gray-300 hover:border-gray-400 shadow-xs transition-colors flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
               Shape & Asymmetry
@@ -113,7 +113,7 @@ export const RiskMomentsCard: React.FC<RiskMomentsCardProps> = ({ moments, unitS
         </div>
 
         {/* Metric 4: Value at Risk & Extreme Tails */}
-        <div className="p-4 rounded-xl bg-white border-2 border-gray-300 shadow-2xs flex flex-col justify-between">
+        <div className="p-4 rounded-xl bg-gray-50/70 border-2 border-gray-300 hover:border-gray-400 shadow-xs transition-colors flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
               Tail Risk & VaR

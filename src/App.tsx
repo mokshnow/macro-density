@@ -6,6 +6,7 @@ import { MarketSelector } from './components/MarketSelector';
 import { MacroHeroCard } from './components/MacroHeroCard';
 import { DensityChart } from './components/DensityChart';
 import { RiskMomentsCard } from './components/RiskMomentsCard';
+import { StressTestCard } from './components/StressTestCard';
 import { HedgingSimulator } from './components/HedgingSimulator';
 import { CustomMarketModal } from './components/CustomMarketModal';
 import { Footer } from './components/Footer';
@@ -33,7 +34,7 @@ export function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
         {/* Market Selector Bar */}
         <div className="mb-6">
           <MarketSelector
@@ -49,11 +50,14 @@ export function App() {
         {/* Interactive Probability Distribution Visualizer */}
         <DensityChart market={currentMarket} />
 
-        {/* Tail Risk Parameters */}
+        {/* Distribution Moments & Tail Risk Parameters */}
         <RiskMomentsCard
           moments={currentMarket.moments}
           unitSuffix={currentMarket.unitSuffix}
         />
+
+        {/* Macro Stress-Test & Scenario Shifter */}
+        <StressTestCard market={currentMarket} />
 
         {/* Scenario & Tail Hedging Simulator */}
         <HedgingSimulator market={currentMarket} />
