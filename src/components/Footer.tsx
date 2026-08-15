@@ -17,27 +17,27 @@ export const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           {/* Disclaimer Badge */}
-          <span className="inline-flex items-center px-3.5 py-1 rounded-full bg-[#F0FDF4] text-[#008A45] border border-[#BBF7D0] font-bold text-xs shadow-2xs tracking-tight">
+          <span className="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-[#F0FDF4] text-[#008A45] border-2 border-[#BBF7D0] font-bold text-xs shadow-2xs tracking-tight">
             Not Officially Endorsed by Kalshi.
           </span>
 
-          {/* Email Contact Feature */}
-          <div className="flex items-center gap-2">
+          {/* Email Contact Feature - Same Height & Sizing */}
+          <div className="inline-flex items-center rounded-xl border-2 border-gray-300 bg-gray-50 hover:bg-white hover:border-gray-400 transition-all shadow-2xs">
             <a
               href={`mailto:${email}?subject=Macro%20Density%20Inquiry%20%2F%20Feedback`}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-gray-800 hover:text-gray-950 bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 hover:border-gray-400 rounded-xl transition-all shadow-2xs group"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-gray-800 hover:text-gray-950 group"
               title="Send an email to the creator"
             >
               <Mail className="w-3.5 h-3.5 text-[#00D26A] group-hover:scale-110 transition-transform" />
               <span>Contact:</span>
-              <span className="font-mono text-gray-950 underline decoration-gray-300 hover:decoration-[#00D26A]">
+              <span className="font-mono text-gray-950 font-semibold">
                 {email}
               </span>
             </a>
 
             <button
               onClick={handleCopyEmail}
-              className="p-1.5 rounded-lg border-2 border-gray-300 hover:border-gray-400 bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-950 transition-all shadow-2xs cursor-pointer"
+              className="px-2.5 py-1.5 border-l-2 border-gray-300 hover:bg-gray-200 text-gray-600 hover:text-gray-950 transition-colors cursor-pointer"
               title="Copy email to clipboard"
             >
               {copied ? (
