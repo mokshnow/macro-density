@@ -361,7 +361,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b-2 border-gray-300">
         <div>
           <h2 className="text-base font-extrabold text-gray-950 tracking-tight">
-            Market-Implied PDF
+            Market-Implied Distribution
           </h2>
         </div>
 
