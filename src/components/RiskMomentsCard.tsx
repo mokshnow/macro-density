@@ -20,7 +20,7 @@ export const RiskMomentsCard: React.FC<RiskMomentsCardProps> = ({ moments, unitS
         <div className="p-4 rounded-xl bg-gray-50/70 border-2 border-gray-300 hover:border-gray-400 shadow-xs transition-colors flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-              Central Tendency
+              Expected Outcome
             </span>
           </div>
           <div className="space-y-1.5 my-1">
@@ -42,9 +42,6 @@ export const RiskMomentsCard: React.FC<RiskMomentsCardProps> = ({ moments, unitS
                 {moments.modeRange}
               </span>
             </div>
-          </div>
-          <div className="text-[11px] text-gray-500 font-medium pt-2 border-t border-gray-200 mt-2">
-            Probability weighted mean of outcomes
           </div>
         </div>
 
@@ -75,9 +72,6 @@ export const RiskMomentsCard: React.FC<RiskMomentsCardProps> = ({ moments, unitS
               </span>
             </div>
           </div>
-          <div className="text-[11px] text-gray-500 font-medium pt-2 border-t border-gray-200 mt-2">
-            Model-free market uncertainty band
-          </div>
         </div>
 
         {/* Metric 3: Skewness & Kurtosis */}
@@ -106,9 +100,6 @@ export const RiskMomentsCard: React.FC<RiskMomentsCardProps> = ({ moments, unitS
                 {moments.skewness > 0 ? 'Upside Risk Biased' : 'Downside Risk Biased'}
               </span>
             </div>
-          </div>
-          <div className="text-[11px] text-gray-500 font-medium pt-2 border-t border-gray-200 mt-2">
-            Positive skew indicates heavier upside tail
           </div>
         </div>
 
