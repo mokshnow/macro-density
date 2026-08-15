@@ -73,7 +73,7 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
 
   return (
     <div className="bg-white rounded-2xl border-2 border-black shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-0">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b-2 border-black mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b-2 border-gray-300 mb-5">
         <h3 className="text-base font-extrabold text-gray-950 tracking-tight">
           Hedging
         </h3>

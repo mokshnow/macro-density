@@ -28,7 +28,7 @@ export const MacroHeroCard: React.FC<MacroHeroCardProps> = ({ market }) => {
   return (
     <div className="bg-white rounded-2xl border-2 border-black shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-6">
       {/* Top row: Title, Meta, and Kalshi Link */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b-2 border-black">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b-2 border-gray-300">
         <div>
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-md bg-gray-950 text-white">
