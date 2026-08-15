@@ -358,7 +358,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
   return (
     <div className="bg-white rounded-2xl border-2 border-black shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-6">
       {/* Header Controls Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-gray-200">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b-2 border-gray-300">
         <div>
           <h2 className="text-base font-extrabold text-gray-950 tracking-tight">
             Market-Implied PDF
@@ -369,51 +369,50 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
         <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl border-2 border-gray-300">
           <button
             onClick={() => setViewMode('smooth_pdf')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               viewMode === 'smooth_pdf'
                 ? 'bg-white text-gray-950 shadow-xs border border-gray-300'
                 : 'text-gray-600 hover:text-gray-950'
             }`}
           >
             <TrendingUp className="w-3.5 h-3.5 text-[#00D26A]" />
-            <span>Density Curve (PDF)</span>
+            <span>PDF</span>
           </button>
 
           <button
             onClick={() => setViewMode('discrete_pmf')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               viewMode === 'discrete_pmf'
                 ? 'bg-white text-gray-950 shadow-xs border border-gray-300'
                 : 'text-gray-600 hover:text-gray-950'
             }`}
           >
             <BarChart2 className="w-3.5 h-3.5 text-[#00D26A]" />
-            <span>Discrete Bins (PMF)</span>
+            <span>PMF</span>
           </button>
 
           <button
             onClick={() => setViewMode('cumulative_cdf')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               viewMode === 'cumulative_cdf'
                 ? 'bg-white text-gray-950 shadow-xs border border-gray-300'
                 : 'text-gray-600 hover:text-gray-950'
             }`}
           >
             <Layers className="w-3.5 h-3.5 text-[#00D26A]" />
-            <span>Cumulative (CDF)</span>
+            <span>CDF</span>
           </button>
 
           <button
             onClick={() => setViewMode('options_compare')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               viewMode === 'options_compare'
                 ? 'bg-white text-gray-950 shadow-xs border border-gray-300'
                 : 'text-gray-600 hover:text-gray-950'
             }`}
           >
             <GitCommit className="w-3.5 h-3.5 text-indigo-600" />
-            <span className="hidden sm:inline">vs. Options Normal</span>
-            <span className="sm:hidden">vs Opt</span>
+            <span>vs. Options</span>
           </button>
         </div>
       </div>
