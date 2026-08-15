@@ -6,7 +6,6 @@ import { MarketSelector } from './components/MarketSelector';
 import { MacroHeroCard } from './components/MacroHeroCard';
 import { DensityChart } from './components/DensityChart';
 import { RiskMomentsCard } from './components/RiskMomentsCard';
-import { StressTestCard } from './components/StressTestCard';
 import { HedgingSimulator } from './components/HedgingSimulator';
 import { CustomMarketModal } from './components/CustomMarketModal';
 import { Footer } from './components/Footer';
@@ -55,9 +54,6 @@ export function App() {
           moments={currentMarket.moments}
           unitSuffix={currentMarket.unitSuffix}
         />
-
-        {/* Macro Stress-Test & Scenario Shifter */}
-        <StressTestCard market={currentMarket} />
 
         {/* Scenario & Tail Hedging Simulator */}
         <HedgingSimulator market={currentMarket} />
