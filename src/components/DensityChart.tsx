@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { MacroMarket, DistributionBin } from '../types/market';
 import { generateSmoothedDensityPoints } from '../utils/distributionMath';
 import { 
@@ -49,8 +49,68 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
   const [intervalX, setIntervalX] = useState<number>(defaultX);
   const [intervalY, setIntervalY] = useState<number>(defaultY);
 
+  // Raw string states for inputs to allow smooth deleting without forcing 0
+  const [inputXStr, setInputXStr] = useState<string>(String(defaultX));
+  const [inputYStr, setInputYStr] = useState<string>(String(defaultY));
+
   // Single threshold for CDF mode
   const [cdfThreshold, setCdfThreshold] = useState<number>(moments.median);
+  const [inputCdfStr, setInputCdfStr] = useState<string>(String(moments.median));
+
+  // Sync inputs when active market changes
+  useEffect(() => {
+    const newX = Number((moments.mean - moments.stdDev).toFixed(2));
+    const newY = Number((moments.mean + moments.stdDev).toFixed(2));
+    setIntervalX(newX);
+    setIntervalY(newY);
+    setInputXStr(String(newX));
+    setInputYStr(String(newY));
+    setCdfThreshold(moments.median);
+    setInputCdfStr(String(moments.median));
+  }, [market.id, moments.mean, moments.stdDev, moments.median]);
+
+  // Input change handlers
+  const handleXChange = (valStr: string) => {
+    setInputXStr(valStr);
+    const parsed = parseFloat(valStr);
+    if (!isNaN(parsed)) {
+      setIntervalX(parsed);
+    }
+  };
+
+  const handleXBlur = () => {
+    if (inputXStr.trim() === '' || isNaN(parseFloat(inputXStr))) {
+      setInputXStr(String(intervalX));
+    }
+  };
+
+  const handleYChange = (valStr: string) => {
+    setInputYStr(valStr);
+    const parsed = parseFloat(valStr);
+    if (!isNaN(parsed)) {
+      setIntervalY(parsed);
+    }
+  };
+
+  const handleYBlur = () => {
+    if (inputYStr.trim() === '' || isNaN(parseFloat(inputYStr))) {
+      setInputYStr(String(intervalY));
+    }
+  };
+
+  const handleCdfChange = (valStr: string) => {
+    setInputCdfStr(valStr);
+    const parsed = parseFloat(valStr);
+    if (!isNaN(parsed)) {
+      setCdfThreshold(parsed);
+    }
+  };
+
+  const handleCdfBlur = () => {
+    if (inputCdfStr.trim() === '' || isNaN(parseFloat(inputCdfStr))) {
+      setInputCdfStr(String(cdfThreshold));
+    }
+  };
 
   // Generate continuous smoothed points
   const smoothedPoints = useMemo(() => {
@@ -230,8 +290,11 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
         const upper = Math.max(dragStartVal, val);
         setIntervalX(lower);
         setIntervalY(upper);
+        setInputXStr(String(lower));
+        setInputYStr(String(upper));
       } else {
         setCdfThreshold(val);
+        setInputCdfStr(String(val));
       }
     }
   };
@@ -246,6 +309,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
 
     if (viewMode === 'cumulative_cdf') {
       setCdfThreshold(coords.val);
+      setInputCdfStr(String(coords.val));
     }
   };
 
@@ -261,15 +325,22 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
             const distToY = Math.abs(coords.val - intervalY);
             if (distToX < distToY) {
               setIntervalX(coords.val);
+              setInputXStr(String(coords.val));
             } else {
               setIntervalY(coords.val);
+              setInputYStr(String(coords.val));
             }
           } else {
-            setIntervalX(Math.min(dragStartVal, coords.val));
-            setIntervalY(Math.max(dragStartVal, coords.val));
+            const low = Math.min(dragStartVal, coords.val);
+            const high = Math.max(dragStartVal, coords.val);
+            setIntervalX(low);
+            setIntervalY(high);
+            setInputXStr(String(low));
+            setInputYStr(String(high));
           }
         } else {
           setCdfThreshold(coords.val);
+          setInputCdfStr(String(coords.val));
         }
       }
     }
@@ -753,10 +824,12 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                 <span className="text-xs font-bold text-gray-800">Lower Bound (X):</span>
                 <div className="flex items-center gap-1">
                   <input
-                    type="number"
-                    step={0.01}
-                    value={intervalX}
-                    onChange={(e) => setIntervalX(parseFloat(e.target.value) || 0)}
+                    type="text"
+                    inputMode="decimal"
+                    value={inputXStr}
+                    onChange={(e) => handleXChange(e.target.value)}
+                    onBlur={handleXBlur}
+                    placeholder="X"
                     className="w-20 px-2 py-1 text-center font-mono font-bold text-xs text-gray-950 bg-gray-50 border-2 border-gray-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
                   />
                   <span className="text-gray-700 font-mono text-xs font-bold">{market.unitSuffix}</span>
@@ -770,10 +843,12 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                 <span className="text-xs font-bold text-gray-800">Upper Bound (Y):</span>
                 <div className="flex items-center gap-1">
                   <input
-                    type="number"
-                    step={0.01}
-                    value={intervalY}
-                    onChange={(e) => setIntervalY(parseFloat(e.target.value) || 0)}
+                    type="text"
+                    inputMode="decimal"
+                    value={inputYStr}
+                    onChange={(e) => handleYChange(e.target.value)}
+                    onBlur={handleYBlur}
+                    placeholder="Y"
                     className="w-20 px-2 py-1 text-center font-mono font-bold text-xs text-gray-950 bg-gray-50 border-2 border-gray-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
                   />
                   <span className="text-gray-700 font-mono text-xs font-bold">{market.unitSuffix}</span>
@@ -797,10 +872,12 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
               <span className="text-xs font-bold text-gray-800">Threshold (X):</span>
               <div className="flex items-center gap-1">
                 <input
-                  type="number"
-                  step={0.01}
-                  value={cdfThreshold}
-                  onChange={(e) => setCdfThreshold(parseFloat(e.target.value) || 0)}
+                  type="text"
+                  inputMode="decimal"
+                  value={inputCdfStr}
+                  onChange={(e) => handleCdfChange(e.target.value)}
+                  onBlur={handleCdfBlur}
+                  placeholder="X"
                   className="w-20 px-2 py-1 text-center font-mono font-bold text-xs text-gray-950 bg-gray-50 border-2 border-gray-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0284C7]/30 focus:border-[#0284C7]"
                 />
                 <span className="text-gray-700 font-mono text-xs font-bold">{market.unitSuffix}</span>
@@ -827,7 +904,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
 
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-0.5 bg-gray-950"></span>
-              <span className="text-gray-700 font-medium">Mean E[X] ({moments.mean}{market.unitSuffix})</span>
+              <span className="text-gray-700 font-medium">E[X] ({moments.mean}{market.unitSuffix})</span>
             </div>
 
             {/* Consensus Benchmark Legend Toggle */}

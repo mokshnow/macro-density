@@ -62,7 +62,7 @@ export const MacroHeroCard: React.FC<MacroHeroCardProps> = ({ market }) => {
         {/* 1. Modal Mass */}
         <div className="bg-white p-3.5 rounded-xl border-2 border-gray-300 shadow-2xs">
           <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-            Modal Peak (Mode)
+            Modal Peak
           </div>
           <div className="text-xl font-extrabold font-mono text-gray-950">
             {moments.modeRange}
@@ -75,7 +75,7 @@ export const MacroHeroCard: React.FC<MacroHeroCardProps> = ({ market }) => {
         {/* 2. Expected Value */}
         <div className="bg-white p-3.5 rounded-xl border-2 border-gray-300 shadow-2xs">
           <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-            Expected Value E[X]
+            Expected Value
           </div>
           <div className="text-xl font-extrabold font-mono text-gray-950">
             {moments.mean}{market.unitSuffix}
@@ -88,7 +88,7 @@ export const MacroHeroCard: React.FC<MacroHeroCardProps> = ({ market }) => {
         {/* 3. Implied Volatility */}
         <div className="bg-white p-3.5 rounded-xl border-2 border-gray-300 shadow-2xs">
           <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-            Implied Vol (1-σ)
+            Implied Vol
           </div>
           <div className="text-xl font-extrabold font-mono text-gray-950">
             ±{moments.stdDev}{market.unitSuffix}

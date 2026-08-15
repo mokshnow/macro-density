@@ -124,15 +124,15 @@ export function exportToPDF(market: MacroMarket): void {
 
         <div class="grid">
           <div class="card">
-            <div class="card-title">Expected Value E[X]</div>
+            <div class="card-title">Expected Value</div>
             <div class="card-val" style="color: #008A45;">${market.moments.mean}${market.unitSuffix}</div>
           </div>
           <div class="card">
-            <div class="card-title">Peak Mode</div>
+            <div class="card-title">Modal Peak</div>
             <div class="card-val">${market.moments.modeRange}</div>
           </div>
           <div class="card">
-            <div class="card-title">Implied Vol (1-σ)</div>
+            <div class="card-title">Implied Vol</div>
             <div class="card-val">±${market.moments.stdDev}${market.unitSuffix}</div>
           </div>
           <div class="card">

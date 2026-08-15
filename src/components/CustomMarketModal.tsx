@@ -19,15 +19,6 @@ export const CustomMarketModal: React.FC<CustomMarketModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Manual strike builder fallback
-  const [manualTitle, setManualTitle] = useState('');
-  const [customStrikes] = useState<{ strike: number; prob: number }[]>([
-    { strike: 2.5, prob: 95 },
-    { strike: 3.0, prob: 80 },
-    { strike: 3.5, prob: 45 },
-    { strike: 4.0, prob: 15 },
-  ]);
-
   if (!isOpen) return null;
 
   const handleUrlSubmit = async (e: React.FormEvent) => {
@@ -106,56 +97,6 @@ export const CustomMarketModal: React.FC<CustomMarketModalProps> = ({
     }
   };
 
-  const handleCreateCustom = () => {
-    if (!manualTitle.trim()) return;
-
-    const contracts: StrikeContract[] = customStrikes.map((s, idx) => ({
-      ticker: `CUSTOM-${idx + 1}`,
-      title: `${manualTitle} Above ${s.strike}%`,
-      strikeType: 'greater',
-      floorStrike: s.strike,
-      yesBid: Math.max(1, s.prob - 1),
-      yesAsk: Math.min(99, s.prob + 1),
-      lastPrice: s.prob,
-      noBid: 100 - s.prob - 1,
-      noAsk: 100 - s.prob + 1,
-      volume: 150000,
-      openInterest: 95000,
-      priceChange24h: 0,
-    }));
-
-    const bins = deriveBinsFromCumulativeStrikes(contracts, '%');
-    const moments = calculateStatisticalMoments(bins, '%');
-
-    const customMarket: MacroMarket = {
-      id: `custom-${Date.now()}`,
-      ticker: 'CUSTOM',
-      eventTicker: `KX-${manualTitle.toUpperCase().replace(/\s+/g, '')}`,
-      title: manualTitle,
-      subtitle: 'Custom Forecast Scenario',
-      category: 'rates',
-      unit: '%',
-      unitSuffix: '%',
-      kalshiUrl: 'https://kalshi.com',
-      settlementDate: '2026-09-30',
-      releaseTime: '08:30 AM EDT',
-      sourceAgency: '',
-      status: 'active',
-      totalVolume: 500000,
-      totalOpenInterest: 300000,
-      contracts,
-      bins,
-      moments,
-      consensus: [],
-      historicalForecastMean: [],
-      description: 'Custom imported probability distribution.',
-      summary: `Custom distribution with mode at ${moments.modeRange} and expected value ${moments.mean}%.`,
-    };
-
-    onAddMarket(customMarket);
-    onClose();
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
       <div className="bg-white rounded-2xl border-2 border-gray-400 shadow-elevated max-w-xl w-full max-h-[90vh] overflow-y-auto p-6">
@@ -169,7 +110,7 @@ export const CustomMarketModal: React.FC<CustomMarketModalProps> = ({
                 Import Kalshi Market URL / Ticker
               </h2>
               <p className="text-xs text-gray-600 font-medium">
-                Paste any Kalshi macro release URL or create a custom strike set
+                Paste any active Kalshi macro release URL or event ticker
               </p>
             </div>
           </div>
@@ -240,41 +181,6 @@ export const CustomMarketModal: React.FC<CustomMarketModalProps> = ({
             )}
           </button>
         </form>
-
-        {/* Divider */}
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t-2 border-gray-200"></div>
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-gray-500 font-bold">Or Create Custom Strike Distribution</span>
-          </div>
-        </div>
-
-        {/* Custom Scenario Builder */}
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-bold text-gray-800 mb-1">
-              Distribution Title
-            </label>
-            <input
-              type="text"
-              value={manualTitle}
-              onChange={(e) => setManualTitle(e.target.value)}
-              placeholder="e.g. Core PCE Inflation 2026 Forecast"
-              className="w-full px-3 py-1.5 text-xs bg-gray-50 border-2 border-gray-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={handleCreateCustom}
-            disabled={!manualTitle.trim()}
-            className="w-full py-2 px-3 text-xs font-bold text-gray-800 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 border-2 border-gray-300 rounded-xl transition-colors"
-          >
-            Create Custom Scenario
-          </button>
-        </div>
       </div>
     </div>
   );

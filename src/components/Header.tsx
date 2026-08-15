@@ -1,15 +1,12 @@
 import React from 'react';
-import { Download, PlusCircle } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 
 interface HeaderProps {
   onOpenCustomMarket: () => void;
-  onOpenExport: () => void;
-  totalMarketsCount: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   onOpenCustomMarket,
-  onOpenExport,
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-gray-300 transition-all">
@@ -33,15 +30,6 @@ export const Header: React.FC<HeaderProps> = ({
               <PlusCircle className="w-3.5 h-3.5 text-gray-600" />
               <span className="hidden sm:inline">Add Kalshi URL</span>
               <span className="sm:hidden">Add</span>
-            </button>
-
-            {/* Export Data */}
-            <button
-              onClick={onOpenExport}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-extrabold text-white bg-[#00D26A] hover:bg-[#00B050] active:scale-[0.98] border-2 border-[#00B050] rounded-xl transition-all shadow-sm shadow-[#00D26A]/20"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Extract Data</span>
             </button>
           </div>
         </div>

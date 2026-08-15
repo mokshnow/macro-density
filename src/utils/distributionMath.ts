@@ -54,7 +54,7 @@ export function deriveBinsFromCumulativeStrikes(
 
     bins.push({
       id: `bin-${i}`,
-      label: `${lower.toFixed(1)} – ${upper.toFixed(1)}${unitSuffix}`,
+      label: `${lower.toFixed(1)}${unitSuffix} – ${upper.toFixed(1)}${unitSuffix}`,
       rangeDisplay: `${lower.toFixed(1)}${unitSuffix} to ${upper.toFixed(1)}${unitSuffix}`,
       lower,
       upper,

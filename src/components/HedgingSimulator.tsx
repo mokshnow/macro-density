@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { MacroMarket } from '../types/market';
-import { Shield, CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 
 interface HedgingSimulatorProps {
   market: MacroMarket;
@@ -34,16 +34,9 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
   return (
     <div className="bg-white rounded-2xl border-2 border-gray-300 shadow-sm p-5 sm:p-6 mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-gray-200 mb-5">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-emerald-50 text-[#00A854] border border-[#BBF7D0]">
-            <Shield className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="text-base font-extrabold text-gray-950 tracking-tight">
-              Hedging
-            </h3>
-          </div>
-        </div>
+        <h3 className="text-base font-extrabold text-gray-950 tracking-tight">
+          Hedging
+        </h3>
       </div>
 
       {/* Simulator Inputs Grid */}
@@ -65,9 +58,6 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
               className="w-full pl-6 pr-3 py-1.5 text-xs font-mono font-bold bg-gray-50 border-2 border-gray-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
             />
           </div>
-          <span className="text-[10px] text-gray-500 mt-1.5 block font-medium">
-            e.g. Fixed income, rates duration, or equities
-          </span>
         </div>
 
         {/* Input 2: Macro Sensitivity */}
@@ -87,9 +77,6 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
               className="w-full pl-6 pr-3 py-1.5 text-xs font-mono font-bold bg-gray-50 border-2 border-gray-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
             />
           </div>
-          <span className="text-[10px] text-gray-500 mt-1.5 block font-medium">
-            Estimated unhedged P&L drawdown
-          </span>
         </div>
 
         {/* Input 3: Target Strike */}
@@ -108,9 +95,6 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
               </option>
             ))}
           </select>
-          <span className="text-[10px] text-gray-500 mt-1.5 block font-medium">
-            Kalshi binary strike contract to buy
-          </span>
         </div>
       </div>
 

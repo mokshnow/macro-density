@@ -1,6 +1,5 @@
 import React from 'react';
 import { StatisticalMoments } from '../types/market';
-import { Scale } from 'lucide-react';
 
 interface RiskMomentsCardProps {
   moments: StatisticalMoments;
@@ -11,16 +10,9 @@ export const RiskMomentsCard: React.FC<RiskMomentsCardProps> = ({ moments, unitS
   return (
     <div className="bg-white rounded-2xl border-2 border-gray-300 shadow-sm p-5 sm:p-6 mb-6">
       <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-5">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-gray-100 text-gray-800 border border-gray-300">
-            <Scale className="w-4 h-4 text-[#00D26A]" />
-          </div>
-          <div>
-            <h3 className="text-base font-extrabold text-gray-950 tracking-tight">
-              Tail Risk
-            </h3>
-          </div>
-        </div>
+        <h3 className="text-base font-extrabold text-gray-950 tracking-tight">
+          Tail Risk
+        </h3>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -30,7 +22,6 @@ export const RiskMomentsCard: React.FC<RiskMomentsCardProps> = ({ moments, unitS
             <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
               Central Tendency
             </span>
-            <span className="text-[11px] font-mono font-bold text-gray-500">Moment 1 (µ)</span>
           </div>
           <div className="space-y-1.5 my-1">
             <div className="flex justify-between items-baseline">
@@ -40,13 +31,13 @@ export const RiskMomentsCard: React.FC<RiskMomentsCardProps> = ({ moments, unitS
               </span>
             </div>
             <div className="flex justify-between items-baseline">
-              <span className="text-xs text-gray-600 font-medium">Median (50th %ile):</span>
+              <span className="text-xs text-gray-600 font-medium">Median:</span>
               <span className="font-mono font-bold text-gray-800 text-sm">
                 {moments.median}{unitSuffix}
               </span>
             </div>
             <div className="flex justify-between items-baseline">
-              <span className="text-xs text-gray-600 font-medium">Mode (Peak):</span>
+              <span className="text-xs text-gray-600 font-medium">Mode:</span>
               <span className="font-mono font-bold text-[#008A45] text-sm">
                 {moments.modeRange}
               </span>
@@ -63,11 +54,10 @@ export const RiskMomentsCard: React.FC<RiskMomentsCardProps> = ({ moments, unitS
             <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
               Implied Dispersion
             </span>
-            <span className="text-[11px] font-mono font-bold text-gray-500">Moment 2 (σ)</span>
           </div>
           <div className="space-y-1.5 my-1">
             <div className="flex justify-between items-baseline">
-              <span className="text-xs text-gray-600 font-medium">1-Sigma Std Dev:</span>
+              <span className="text-xs text-gray-600 font-medium">1 Std Dev:</span>
               <span className="font-mono font-bold text-gray-950 text-base">
                 ±{moments.stdDev}{unitSuffix}
               </span>
@@ -96,7 +86,6 @@ export const RiskMomentsCard: React.FC<RiskMomentsCardProps> = ({ moments, unitS
             <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
               Shape & Asymmetry
             </span>
-            <span className="text-[11px] font-mono font-bold text-gray-500">Moments 3 & 4</span>
           </div>
           <div className="space-y-1.5 my-1">
             <div className="flex justify-between items-baseline">

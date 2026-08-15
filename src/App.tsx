@@ -8,7 +8,6 @@ import { DensityChart } from './components/DensityChart';
 import { RiskMomentsCard } from './components/RiskMomentsCard';
 import { HedgingSimulator } from './components/HedgingSimulator';
 import { CustomMarketModal } from './components/CustomMarketModal';
-import { ExportModal } from './components/ExportModal';
 import { Footer } from './components/Footer';
 import { Analytics } from '@vercel/analytics/react';
 
@@ -18,7 +17,6 @@ export function App() {
 
   // Modals state
   const [isCustomMarketOpen, setIsCustomMarketOpen] = useState<boolean>(false);
-  const [isExportOpen, setIsExportOpen] = useState<boolean>(false);
 
   const currentMarket = markets.find((m) => m.id === selectedMarketId) || markets[0];
 
@@ -32,8 +30,6 @@ export function App() {
       {/* Top Header */}
       <Header
         onOpenCustomMarket={() => setIsCustomMarketOpen(true)}
-        onOpenExport={() => setIsExportOpen(true)}
-        totalMarketsCount={markets.length}
       />
 
       {/* Main Content Area */}
@@ -71,12 +67,6 @@ export function App() {
         isOpen={isCustomMarketOpen}
         onClose={() => setIsCustomMarketOpen(false)}
         onAddMarket={handleAddCustomMarket}
-      />
-
-      <ExportModal
-        isOpen={isExportOpen}
-        onClose={() => setIsExportOpen(false)}
-        market={currentMarket}
       />
 
       <Analytics />
