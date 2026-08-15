@@ -342,7 +342,7 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
   return (
     <div className="bg-white rounded-2xl border-2 border-black shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-6">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b-2 border-gray-300 mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b-2 border-black mb-5">
         <div className="flex items-center gap-2.5">
           <div className="p-1.5 rounded-lg bg-amber-50 text-amber-700 border-2 border-amber-300">
             <Zap className="w-4 h-4 fill-amber-500 text-amber-600" />

@@ -9,7 +9,7 @@ interface RiskMomentsCardProps {
 export const RiskMomentsCard: React.FC<RiskMomentsCardProps> = ({ moments, unitSuffix }) => {
   return (
     <div className="bg-white rounded-2xl border-2 border-black shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-6">
-      <div className="flex items-center justify-between pb-4 border-b-2 border-gray-300 mb-5">
+      <div className="flex items-center justify-between pb-4 border-b-2 border-black mb-5">
         <h3 className="text-base font-extrabold text-gray-950 tracking-tight">
           Distribution Moments
         </h3>
