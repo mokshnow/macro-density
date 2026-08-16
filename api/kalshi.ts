@@ -89,21 +89,35 @@ const CORE_EVENTS: {
   },
 ];
 
+let memoryCache: { timestamp: number; data: any } | null = null;
+const CACHE_TTL_MS = 30000; // 30s cache
+
 async function fetchKalshiEvent(eventTicker: string) {
   const url = `${KALSHI_API_BASE}/events/${encodeURIComponent(eventTicker)}?with_nested_markets=true`;
-  const res = await fetch(url, {
-    headers: {
-      Accept: 'application/json',
-      'User-Agent': 'MacroDensity/1.0',
-    },
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-  if (!res.ok) {
-    throw new Error(`Kalshi API returned HTTP ${res.status} for ${eventTicker}`);
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      },
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      throw new Error(`Kalshi API returned HTTP ${res.status} for ${eventTicker}`);
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    throw err;
   }
-
-  const data = await res.json();
-  return data;
 }
 
 function parseKalshiEventToMarket(
@@ -268,6 +282,10 @@ export default async function handler(req: any, res: any) {
   try {
     // Mode 1: Fetch the 3 core macroeconomic markets
     if (core === 'true' || core === '') {
+      if (memoryCache && Date.now() - memoryCache.timestamp < CACHE_TTL_MS) {
+        return res.status(200).json(memoryCache.data);
+      }
+
       const results = await Promise.allSettled(
         CORE_EVENTS.map(async (conf) => {
           const raw = await fetchKalshiEvent(conf.defaultEventTicker);
@@ -286,13 +304,19 @@ export default async function handler(req: any, res: any) {
         }
       });
 
-      return res.status(200).json({
+      const responseData = {
         success: true,
         markets,
         partial: failedEvents.length > 0,
         failedEvents,
         lastUpdated: new Date().toISOString(),
-      });
+      };
+
+      if (markets.length > 0) {
+        memoryCache = { timestamp: Date.now(), data: responseData };
+      }
+
+      return res.status(200).json(responseData);
     }
 
     // Mode 2: Fetch single custom event ticker

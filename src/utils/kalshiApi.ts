@@ -51,7 +51,7 @@ export async function fetchCoreKalshiMarkets(): Promise<{
 }> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const timeoutId = setTimeout(() => controller.abort(), 18000);
 
     const response = await fetch('/api/kalshi?core=true', {
       signal: controller.signal,
@@ -93,7 +93,7 @@ export async function fetchKalshiMarketData(
 ): Promise<{ success: boolean; market?: MacroMarket; error?: string }> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     const url = `/api/kalshi?event_ticker=${encodeURIComponent(eventTicker)}&series_ticker=${encodeURIComponent(seriesTicker)}`;
     const response = await fetch(url, {
