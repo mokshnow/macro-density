@@ -1,5 +1,4 @@
-import { MacroMarket, StrikeContract } from '../types/market';
-import { deriveBinsFromCumulativeStrikes, calculateStatisticalMoments } from './distributionMath';
+import { MacroMarket } from '../types/market';
 
 /**
  * Parses any Kalshi URL or ticker string to extract metadata.
@@ -42,80 +41,89 @@ export function parseKalshiInput(input: string): { seriesTicker: string; eventTi
 }
 
 /**
- * Fetches live market contracts from Kalshi public API v2 if available,
- * or creates a synthesized calibrated market instance for custom tickers.
+ * Fetches all core live macroeconomic markets from the serverless backend proxy (/api/kalshi?core=true).
+ */
+export async function fetchCoreKalshiMarkets(): Promise<{
+  success: boolean;
+  markets: MacroMarket[];
+  error?: string;
+  lastUpdated?: string;
+}> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+    const response = await fetch('/api/kalshi?core=true', {
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      return {
+        success: false,
+        markets: [],
+        error: `Server responded with HTTP ${response.status}`,
+      };
+    }
+
+    const data = await response.json();
+    return {
+      success: data.success ?? true,
+      markets: data.markets || [],
+      error: data.error,
+      lastUpdated: data.lastUpdated || new Date().toISOString(),
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      markets: [],
+      error: err?.message || 'Network request failed',
+    };
+  }
+}
+
+/**
+ * Fetches live market contracts from Kalshi for a specific event ticker through the backend proxy.
  */
 export async function fetchKalshiMarketData(
   eventTicker: string,
   seriesTicker: string
-): Promise<MacroMarket | null> {
+): Promise<{ success: boolean; market?: MacroMarket; error?: string }> {
   try {
-    // Attempt public Kalshi API fetch (CORS/proxy aware)
-    const apiUrl = `https://external-api.kalshi.com/trade-api/v2/events/${eventTicker.toLowerCase()}`;
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
 
-    const response = await fetch(apiUrl, {
+    const url = `/api/kalshi?event_ticker=${encodeURIComponent(eventTicker)}&series_ticker=${encodeURIComponent(seriesTicker)}`;
+    const response = await fetch(url, {
       signal: controller.signal,
-      headers: {
-        Accept: 'application/json',
-      },
-    }).catch(() => null);
+      headers: { Accept: 'application/json' },
+    });
 
     clearTimeout(timeoutId);
 
-    if (response && response.ok) {
-      const data = await response.json();
-      if (data && data.event && data.markets && data.markets.length > 0) {
-        // Map real Kalshi markets to StrikeContracts
-        const contracts: StrikeContract[] = data.markets.map((m: any) => ({
-          ticker: m.ticker,
-          title: m.title || m.subtitle || m.ticker,
-          strikeType: m.strike_type === 'greater' ? 'greater' : 'less',
-          floorStrike: m.floor_strike ?? m.strike_level,
-          capStrike: m.cap_strike,
-          yesBid: m.yes_bid ?? 0,
-          yesAsk: m.yes_ask ?? 0,
-          lastPrice: m.last_price ?? (Math.round(((m.yes_bid || 0) + (m.yes_ask || 0)) / 2) || 50),
-          noBid: m.no_bid ?? 0,
-          noAsk: m.no_ask ?? 0,
-          volume: m.volume ?? 0,
-          openInterest: m.open_interest ?? 0,
-          priceChange24h: 0,
-        }));
-
-        const bins = deriveBinsFromCumulativeStrikes(contracts, '%');
-        const moments = calculateStatisticalMoments(bins, '%');
-
-        return {
-          id: eventTicker.toLowerCase(),
-          ticker: seriesTicker,
-          eventTicker: eventTicker,
-          title: data.event.title || `${seriesTicker} Implied Distribution`,
-          subtitle: data.event.sub_title || `Live Kalshi Market Feed`,
-          category: 'inflation',
-          unit: '%',
-          unitSuffix: '%',
-          kalshiUrl: `https://kalshi.com/markets/${seriesTicker.toLowerCase()}`,
-          settlementDate: data.event.expiration_time?.split('T')[0] || new Date().toISOString().split('T')[0],
-          releaseTime: '08:30 AM EDT',
-          sourceAgency: '',
-          status: 'active',
-          totalVolume: contracts.reduce((acc, c) => acc + c.volume, 0) || 500000,
-          totalOpenInterest: contracts.reduce((acc, c) => acc + c.openInterest, 0) || 300000,
-          contracts,
-          bins,
-          moments,
-          consensus: [],
-          historicalForecastMean: [],
-          description: data.event.settlement_sources?.[0]?.name || 'Kalshi continuous orderbook pricing.',
-          summary: `Market distribution constructed directly from ${contracts.length} active live contracts. Expected value is ${moments.mean}%.`,
-        };
-      }
+    if (!response.ok) {
+      const errorJson = await response.json().catch(() => null);
+      return {
+        success: false,
+        error: errorJson?.error || `HTTP ${response.status}: Failed to retrieve '${eventTicker}' from Kalshi`,
+      };
     }
-  } catch {
-    // Graceful fallback to client generation
-  }
 
-  return null;
+    const data = await response.json();
+    if (data.success && data.market) {
+      return { success: true, market: data.market };
+    }
+
+    return {
+      success: false,
+      error: data.error || `No active contracts found for '${eventTicker}' on Kalshi`,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err?.message || `Failed to connect to Kalshi proxy for '${eventTicker}'`,
+    };
+  }
 }

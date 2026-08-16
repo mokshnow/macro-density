@@ -59,6 +59,15 @@ export interface ConsensusEstimate {
   differenceFromKalshiMode: number;
 }
 
+export interface HistoricalSnapshot {
+  timestamp: string; // e.g. "May 2026", "Jun 2026", "Jul 2026", "Aug 01", "Aug 08", "Current"
+  mean: number; // Market-implied Expected Outcome
+  median?: number;
+  stdDev?: number; // Market uncertainty band
+  confidence68?: [number, number]; // [mean - stdDev, mean + stdDev]
+  consensus?: number; // Institutional consensus benchmark at that time
+}
+
 export interface MacroMarket {
   id: string;
   ticker: string;
@@ -81,6 +90,11 @@ export interface MacroMarket {
   moments: StatisticalMoments;
   consensus: ConsensusEstimate[];
   historicalForecastMean: { timestamp: string; mean: number }[];
+  historicalSnapshots?: HistoricalSnapshot[];
   description: string;
   summary: string;
+  lastUpdated?: string;
+  isLive?: boolean;
+  isSnapshot?: boolean;
+  errorMessage?: string;
 }
