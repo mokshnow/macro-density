@@ -1,7 +1,299 @@
-import { deriveBinsFromCumulativeStrikes, calculateStatisticalMoments } from '../src/utils/distributionMath';
-import { MacroMarket, StrikeContract, MarketCategory, ConsensusEstimate, HistoricalSnapshot } from '../src/types/market';
+export interface StrikeContract {
+  ticker: string;
+  title: string;
+  strikeType: 'greater' | 'less';
+  floorStrike?: number;
+  capStrike?: number;
+  yesBid: number;
+  yesAsk: number;
+  lastPrice: number;
+  noBid: number;
+  noAsk: number;
+  volume: number;
+  openInterest: number;
+  priceChange24h?: number;
+}
+
+export interface DistributionBin {
+  id: string;
+  label: string;
+  rangeDisplay: string;
+  lower: number;
+  upper: number;
+  midpoint: number;
+  probability: number;
+  cumulativeProb: number;
+  isMode: boolean;
+  isTail: boolean;
+  tailDirection?: 'left' | 'right';
+  delta24h?: number;
+  yesContractTicker?: string;
+  marketPrice?: number;
+}
+
+export interface StatisticalMoments {
+  mean: number;
+  median: number;
+  mode: number;
+  modeRange: string;
+  stdDev: number;
+  variance: number;
+  skewness: number;
+  kurtosis: number;
+  entropy: number;
+  var95: number;
+  upsideTailProb: number;
+  downsideTailProb: number;
+  confidence68: [number, number];
+  confidence95: [number, number];
+}
+
+export type MarketCategory = 'inflation' | 'gdp' | 'labor' | 'fed' | 'housing' | 'custom';
+
+export interface ConsensusEstimate {
+  source: string;
+  value: number;
+  date?: string;
+  differenceFromKalshiMode?: number;
+}
+
+export interface HistoricalSnapshot {
+  timestamp: string;
+  mean: number;
+  median?: number;
+  stdDev?: number;
+  confidence68?: [number, number];
+  consensus?: number;
+}
+
+export interface MacroMarket {
+  id: string;
+  ticker: string;
+  eventTicker: string;
+  title: string;
+  subtitle: string;
+  category: MarketCategory;
+  unit: string;
+  unitSuffix: string;
+  kalshiUrl: string;
+  settlementDate: string;
+  releaseTime: string;
+  sourceAgency: string;
+  status: 'active' | 'closed' | 'settled';
+  totalVolume: number;
+  totalOpenInterest: number;
+  contracts: StrikeContract[];
+  bins: DistributionBin[];
+  moments: StatisticalMoments;
+  consensus?: ConsensusEstimate[];
+  historicalForecastMean?: { timestamp: string; mean: number }[];
+  historicalSnapshots?: HistoricalSnapshot[];
+  description: string;
+  summary: string;
+  lastUpdated: string;
+  isLive?: boolean;
+  isSnapshot?: boolean;
+}
 
 const KALSHI_API_BASE = 'https://api.elections.kalshi.com/trade-api/v2';
+
+export function deriveBinsFromCumulativeStrikes(
+  contracts: StrikeContract[],
+  unitSuffix: string = '%'
+): DistributionBin[] {
+  const sorted = [...contracts].sort((a, b) => (a.floorStrike ?? 0) - (b.floorStrike ?? 0));
+  if (sorted.length === 0) return [];
+
+  const bins: DistributionBin[] = [];
+  const first = sorted[0];
+  const step = sorted.length > 1 && sorted[1].floorStrike && sorted[0].floorStrike
+    ? (sorted[1].floorStrike - sorted[0].floorStrike)
+    : 0.1;
+
+  const lowestStrike = first.floorStrike ?? 0;
+  const leftTailProb = Math.max(0, 100 - first.lastPrice);
+  bins.push({
+    id: `bin-left-tail`,
+    label: `< ${lowestStrike.toFixed(1)}${unitSuffix}`,
+    rangeDisplay: `≤ ${lowestStrike.toFixed(1)}${unitSuffix}`,
+    lower: lowestStrike - step * 1.5,
+    upper: lowestStrike,
+    midpoint: lowestStrike - step * 0.5,
+    probability: Number(leftTailProb.toFixed(1)),
+    cumulativeProb: Number(leftTailProb.toFixed(1)),
+    isMode: false,
+    isTail: true,
+    tailDirection: 'left',
+    delta24h: first.priceChange24h ? -first.priceChange24h : 0,
+  });
+
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const current = sorted[i];
+    const next = sorted[i + 1];
+    const lower = current.floorStrike ?? 0;
+    const upper = next.floorStrike ?? lower + step;
+    const prob = Math.max(0, current.lastPrice - next.lastPrice);
+
+    bins.push({
+      id: `bin-${i}`,
+      label: `${lower.toFixed(1)}${unitSuffix} – ${upper.toFixed(1)}${unitSuffix}`,
+      rangeDisplay: `${lower.toFixed(1)}${unitSuffix} to ${upper.toFixed(1)}${unitSuffix}`,
+      lower,
+      upper,
+      midpoint: (lower + upper) / 2,
+      probability: Number(prob.toFixed(1)),
+      cumulativeProb: 0,
+      isMode: false,
+      isTail: false,
+      delta24h: (current.priceChange24h || 0) - (next.priceChange24h || 0),
+      yesContractTicker: current.ticker,
+      marketPrice: current.lastPrice,
+    });
+  }
+
+  const last = sorted[sorted.length - 1];
+  const highestStrike = last.floorStrike ?? 0;
+  const rightTailProb = Math.max(0, last.lastPrice);
+  bins.push({
+    id: `bin-right-tail`,
+    label: `> ${highestStrike.toFixed(1)}${unitSuffix}`,
+    rangeDisplay: `> ${highestStrike.toFixed(1)}${unitSuffix}`,
+    lower: highestStrike,
+    upper: highestStrike + step * 1.5,
+    midpoint: highestStrike + step * 0.5,
+    probability: Number(rightTailProb.toFixed(1)),
+    cumulativeProb: 100,
+    isMode: false,
+    isTail: true,
+    tailDirection: 'right',
+    delta24h: last.priceChange24h || 0,
+    yesContractTicker: last.ticker,
+    marketPrice: last.lastPrice,
+  });
+
+  const rawSum = bins.reduce((acc, b) => acc + b.probability, 0);
+  if (rawSum > 0) {
+    let runningCumulative = 0;
+    bins.forEach((bin) => {
+      bin.probability = Number(((bin.probability / rawSum) * 100).toFixed(1));
+      runningCumulative += bin.probability;
+      bin.cumulativeProb = Number(Math.min(100, runningCumulative).toFixed(1));
+    });
+  }
+
+  let maxProb = -1;
+  let modeIndex = -1;
+  bins.forEach((b, idx) => {
+    if (b.probability > maxProb) {
+      maxProb = b.probability;
+      modeIndex = idx;
+    }
+  });
+
+  if (modeIndex >= 0) {
+    bins[modeIndex].isMode = true;
+  }
+
+  return bins;
+}
+
+export function calculateStatisticalMoments(
+  bins: DistributionBin[],
+  unitSuffix: string = '%'
+): StatisticalMoments {
+  if (bins.length === 0) {
+    return {
+      mean: 0,
+      median: 0,
+      mode: 0,
+      modeRange: '0' + unitSuffix,
+      stdDev: 0,
+      variance: 0,
+      skewness: 0,
+      kurtosis: 3,
+      entropy: 0,
+      var95: 0,
+      upsideTailProb: 0,
+      downsideTailProb: 0,
+      confidence68: [0, 0],
+      confidence95: [0, 0],
+    };
+  }
+
+  let mean = 0;
+  bins.forEach((bin) => {
+    mean += bin.midpoint * (bin.probability / 100);
+  });
+
+  let variance = 0;
+  let m3 = 0;
+  let m4 = 0;
+  let entropy = 0;
+
+  bins.forEach((bin) => {
+    const p = bin.probability / 100;
+    if (p > 0) {
+      const diff = bin.midpoint - mean;
+      variance += Math.pow(diff, 2) * p;
+      m3 += Math.pow(diff, 3) * p;
+      m4 += Math.pow(diff, 4) * p;
+      entropy -= p * Math.log2(p);
+    }
+  });
+
+  const stdDev = Math.sqrt(variance);
+  const skewness = stdDev > 0 ? m3 / Math.pow(stdDev, 3) : 0;
+  const kurtosis = stdDev > 0 ? m4 / Math.pow(stdDev, 4) : 3;
+
+  let median = mean;
+  for (let i = 0; i < bins.length; i++) {
+    if (bins[i].cumulativeProb >= 50) {
+      const prevCum = i > 0 ? bins[i - 1].cumulativeProb : 0;
+      const binWeight = bins[i].cumulativeProb - prevCum;
+      const fraction = binWeight > 0 ? (50 - prevCum) / binWeight : 0.5;
+      median = bins[i].lower + fraction * (bins[i].upper - bins[i].lower);
+      break;
+    }
+  }
+
+  const modeBin = bins.find((b) => b.isMode) || bins[0];
+  const mode = modeBin.midpoint;
+  const modeRange = modeBin.rangeDisplay;
+
+  let var95 = bins[bins.length - 1].upper;
+  for (let i = 0; i < bins.length; i++) {
+    if (bins[i].cumulativeProb >= 95) {
+      var95 = bins[i].upper;
+      break;
+    }
+  }
+
+  const upsideTailProb = bins[bins.length - 1]?.probability || 0;
+  const downsideTailProb = bins[0]?.probability || 0;
+
+  return {
+    mean: Number(mean.toFixed(2)),
+    median: Number(median.toFixed(2)),
+    mode: Number(mode.toFixed(2)),
+    modeRange,
+    stdDev: Number(stdDev.toFixed(2)),
+    variance: Number(variance.toFixed(4)),
+    skewness: Number(skewness.toFixed(2)),
+    kurtosis: Number(kurtosis.toFixed(2)),
+    entropy: Number(entropy.toFixed(2)),
+    var95: Number(var95.toFixed(2)),
+    upsideTailProb,
+    downsideTailProb,
+    confidence68: [
+      Number((mean - stdDev).toFixed(2)),
+      Number((mean + stdDev).toFixed(2)),
+    ],
+    confidence95: [
+      Number((mean - 1.96 * stdDev).toFixed(2)),
+      Number((mean + 1.96 * stdDev).toFixed(2)),
+    ],
+  };
+}
 
 const CORE_EVENTS: {
   id: string;
@@ -142,7 +434,6 @@ function parseKalshiEventToMarket(
     throw new Error('No active market contracts found in Kalshi event.');
   }
 
-  // Filter and parse valid contracts
   const contracts: StrikeContract[] = rawMarkets
     .filter((m: any) => m.floor_strike !== undefined || m.strike_level !== undefined)
     .map((m: any) => {
@@ -194,7 +485,6 @@ function parseKalshiEventToMarket(
   const marketId = meta?.id || event.event_ticker.toLowerCase();
   const seriesTicker = event.series_ticker || event.event_ticker.split('-')[0];
 
-  // Wire historical snapshots with dynamic live current datapoint
   const historicalSnapshots: HistoricalSnapshot[] = meta?.historicalSnapshots
     ? [
         ...meta.historicalSnapshots,
@@ -217,7 +507,6 @@ function parseKalshiEventToMarket(
     mean: h.mean,
   }));
 
-  // Calculate live spreads against institutional consensus
   const consensus: ConsensusEstimate[] = (meta?.consensus || []).map((c) => ({
     ...c,
     differenceFromKalshiMode: Number((moments.mean - c.value).toFixed(2)),
@@ -259,7 +548,6 @@ function parseKalshiEventToMarket(
 }
 
 export default async function handler(req: any, res: any) {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
@@ -280,7 +568,6 @@ export default async function handler(req: any, res: any) {
   const { core, event_ticker, series_ticker } = req.query || {};
 
   try {
-    // Mode 1: Fetch the 3 core macroeconomic markets
     if (core === 'true' || core === '') {
       if (memoryCache && Date.now() - memoryCache.timestamp < CACHE_TTL_MS) {
         return res.status(200).json(memoryCache.data);
@@ -319,7 +606,6 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json(responseData);
     }
 
-    // Mode 2: Fetch single custom event ticker
     const targetTicker = (event_ticker || series_ticker || '').toString().trim();
     if (!targetTicker) {
       return res.status(400).json({
