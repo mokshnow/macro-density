@@ -1,13 +1,21 @@
 import React from 'react';
 import { MacroMarket } from '../types/market';
-import { ExternalLink, Activity } from 'lucide-react';
+import { ExternalLink, Activity, RefreshCw, Clock, Info } from 'lucide-react';
+import { useRelativeTime } from '../hooks/useKalshiLive';
 
 interface MacroHeroCardProps {
   market: MacroMarket;
+  isRefreshing?: boolean;
+  onRefresh?: () => void;
 }
 
-export const MacroHeroCard: React.FC<MacroHeroCardProps> = ({ market }) => {
+export const MacroHeroCard: React.FC<MacroHeroCardProps> = ({
+  market,
+  isRefreshing = false,
+  onRefresh,
+}) => {
   const { moments } = market;
+  const relativeTime = useRelativeTime(market.lastUpdated);
 
   const skewDirection = moments.skewness > 0.15 
     ? 'Upside Skew' 
@@ -27,12 +35,58 @@ export const MacroHeroCard: React.FC<MacroHeroCardProps> = ({ market }) => {
 
   return (
     <div className="bg-white rounded-2xl border-2 border-black shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-6">
+      {/* Offline / Snapshot Transparency Alert */}
+      {(!market.isLive || market.isSnapshot) && (
+        <div className="mb-4 p-3 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-900 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fade-in">
+          <div className="flex items-center gap-2">
+            <Info className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>
+              <strong>Viewing Reference Snapshot:</strong> Live Kalshi API could not be reached. Showing historical reference data.
+            </span>
+          </div>
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="px-3 py-1 rounded-lg bg-amber-200 hover:bg-amber-300 text-amber-950 font-bold text-xs transition-colors shrink-0 cursor-pointer disabled:opacity-50"
+            >
+              {isRefreshing ? 'Retrying...' : 'Retry Connection'}
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Top row: Title, Meta, and Kalshi Link */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b-2 border-gray-300">
         <div>
-          <div className="flex items-center gap-2 flex-wrap mb-1">
+          <div className="flex items-center gap-2.5 flex-wrap mb-1.5">
             <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-md bg-gray-950 text-white">
               {market.eventTicker}
+            </span>
+
+            {/* Live Feed Status Pill */}
+            {market.isLive ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 text-[#008A45] border-2 border-[#BBF7D0] text-xs font-extrabold shadow-2xs">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span>LIVE KALSHI FEED</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 border-2 border-amber-300 text-xs font-bold shadow-2xs">
+                <span className="inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                <span>REFERENCE SNAPSHOT</span>
+              </span>
+            )}
+
+            {/* Last Updated Timestamp */}
+            <span
+              className="inline-flex items-center gap-1 text-[11px] text-gray-500 font-medium font-mono pl-1"
+              title={market.lastUpdated ? `Last synchronized at ${new Date(market.lastUpdated).toUTCString()}` : 'Snapshot'}
+            >
+              <Clock className="w-3 h-3 text-gray-400" />
+              <span>{relativeTime}</span>
             </span>
           </div>
 
@@ -44,12 +98,25 @@ export const MacroHeroCard: React.FC<MacroHeroCardProps> = ({ market }) => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Live Refresh Trigger Button */}
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-gray-800 hover:text-gray-950 bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 hover:border-gray-400 rounded-xl transition-all shadow-2xs cursor-pointer disabled:opacity-60"
+              title="Fetch latest live prices from Kalshi"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-[#00D26A] ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
+          )}
+
           <a
             href={market.kalshiUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-gray-800 hover:text-gray-950 bg-gray-50 hover:bg-gray-100 border-2 border-gray-400 hover:border-gray-500 rounded-xl transition-all shadow-2xs"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-gray-800 hover:text-gray-950 bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 hover:border-gray-400 rounded-xl transition-all shadow-2xs"
           >
             <span>View on Kalshi</span>
             <ExternalLink className="w-3.5 h-3.5 text-gray-500" />
@@ -141,7 +208,7 @@ export const MacroHeroCard: React.FC<MacroHeroCardProps> = ({ market }) => {
       </div>
 
       {/* Bottom Summary Banner */}
-      <div className="pt-4 border-t border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+      <div className="pt-4 border-t-2 border-gray-300 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
         <div className="flex items-start gap-2.5 text-gray-800 bg-gray-50/80 p-3.5 rounded-xl border-2 border-gray-300 w-full">
           <div className="p-1 rounded-md bg-[#00D26A]/20 text-[#008A45] shrink-0 mt-0.5">
             <Activity className="w-4 h-4" />
