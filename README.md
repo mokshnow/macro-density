@@ -1,12 +1,9 @@
 # Macro Density — Kalshi-Implied Macroeconomic Probability Densities
 
 > **Kalshi-implied macroeconomic probability densities.** Extract model-free **Probability Density Functions (PDFs)**, **Cumulative Distribution Functions (CDFs)**, and **Statistical Moments** directly from **Kalshi prediction markets**.
-
-Inspired by the clean, authoritative design of **Augustus.com**, the platform features a white & Kalshi green aesthetic (`#00D26A`), high-contrast quantitative typography, and zero-friction data extraction tools.
-
 ---
 
-## 🎯 Supported Core Macro Markets
+## Supported Core Macro Markets
 
 1. **US CPI YoY Inflation (August 2026)**
    - Kalshi Series: `KXCPIYOY` | Event: `KXCPIYOY-26AUG`
@@ -23,7 +20,7 @@ Inspired by the clean, authoritative design of **Augustus.com**, the platform fe
 
 ---
 
-## 📐 Mathematical Formulation: Why Prediction Markets?
+## Mathematical Formulation: Why Prediction Markets?
 
 Traditional options pricing models (Black-Scholes, Bachelier) require subjective distributional assumptions (e.g. lognormality, volatility smiles, risk-neutral transformations). 
 
