@@ -48,6 +48,23 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
 
   const { bins, moments } = market;
 
+  // Dimensions
+  const svgWidth = 800;
+  const svgHeight = 370;
+  const padding = { top: 46, right: 30, bottom: 64, left: 45 };
+  const graphWidth = svgWidth - padding.left - padding.right;
+  const graphHeight = svgHeight - padding.top - padding.bottom;
+
+  // X and Y scales
+  const minX = bins.length > 0 ? bins[0].lower : 0;
+  const maxX = bins.length > 0 ? bins[bins.length - 1].upper : 10;
+  const rangeX = Math.max(maxX - minX, 0.001);
+
+  const scaleX = (val: number) => padding.left + ((val - minX) / rangeX) * graphWidth;
+  const unscaleX = (svgXCoord: number) => minX + ((svgXCoord - padding.left) / graphWidth) * rangeX;
+  const scaleYDensity = (densityVal: number) => padding.top + graphHeight - (densityVal / 100) * graphHeight;
+  const scaleYCdf = (cdfPct: number) => padding.top + graphHeight - (cdfPct / 100) * graphHeight;
+
   // Primary Consensus Benchmark Value
   const consensusVal = market.consensus && market.consensus.length > 0 
     ? market.consensus[0].value 
@@ -144,23 +161,6 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
   const smoothedPoints = useMemo(() => {
     return generateSmoothedDensityPoints(bins, 140);
   }, [bins]);
-
-  // Dimensions
-  const svgWidth = 800;
-  const svgHeight = 370;
-  const padding = { top: 46, right: 30, bottom: 64, left: 45 };
-  const graphWidth = svgWidth - padding.left - padding.right;
-  const graphHeight = svgHeight - padding.top - padding.bottom;
-
-  // X and Y scales
-  const minX = bins.length > 0 ? bins[0].lower : 0;
-  const maxX = bins.length > 0 ? bins[bins.length - 1].upper : 10;
-  const rangeX = Math.max(maxX - minX, 0.001);
-
-  const scaleX = (val: number) => padding.left + ((val - minX) / rangeX) * graphWidth;
-  const unscaleX = (svgXCoord: number) => minX + ((svgXCoord - padding.left) / graphWidth) * rangeX;
-  const scaleYDensity = (densityVal: number) => padding.top + graphHeight - (densityVal / 100) * graphHeight;
-  const scaleYCdf = (cdfPct: number) => padding.top + graphHeight - (cdfPct / 100) * graphHeight;
 
   // Filter non-zero probability bins for discrete PMF
   const nonZeroBins = useMemo(() => {
