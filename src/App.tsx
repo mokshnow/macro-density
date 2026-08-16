@@ -9,6 +9,7 @@ import { RiskMomentsCard } from './components/RiskMomentsCard';
 import { HedgingSimulator } from './components/HedgingSimulator';
 import { CustomMarketModal } from './components/CustomMarketModal';
 import { Footer } from './components/Footer';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Analytics } from '@vercel/analytics/react';
 
 export function App() {
@@ -53,26 +54,38 @@ export function App() {
 
         {/* Macro Hero Card */}
         {currentMarket && (
-          <MacroHeroCard
-            market={currentMarket}
-            isRefreshing={isRefreshing}
-            onRefresh={refreshLive}
-          />
+          <ErrorBoundary fallbackTitle="Macro Overview Error">
+            <MacroHeroCard
+              market={currentMarket}
+              isRefreshing={isRefreshing}
+              onRefresh={refreshLive}
+            />
+          </ErrorBoundary>
         )}
 
         {/* Interactive Probability Distribution Visualizer */}
-        {currentMarket && <DensityChart market={currentMarket} />}
+        {currentMarket && (
+          <ErrorBoundary fallbackTitle="Density Visualizer Error">
+            <DensityChart market={currentMarket} />
+          </ErrorBoundary>
+        )}
 
         {/* Distribution Moments & Tail Risk Parameters */}
         {currentMarket && (
-          <RiskMomentsCard
-            moments={currentMarket.moments}
-            unitSuffix={currentMarket.unitSuffix}
-          />
+          <ErrorBoundary fallbackTitle="Moments Card Error">
+            <RiskMomentsCard
+              moments={currentMarket.moments}
+              unitSuffix={currentMarket.unitSuffix}
+            />
+          </ErrorBoundary>
         )}
 
         {/* Scenario & Tail Hedging Simulator */}
-        {currentMarket && <HedgingSimulator market={currentMarket} />}
+        {currentMarket && (
+          <ErrorBoundary fallbackTitle="Hedging Simulator Error">
+            <HedgingSimulator market={currentMarket} />
+          </ErrorBoundary>
+        )}
       </main>
 
       {/* Footer */}

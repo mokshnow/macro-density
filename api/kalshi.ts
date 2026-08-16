@@ -42,8 +42,10 @@ export interface StatisticalMoments {
   kurtosis: number;
   entropy: number;
   var95: number;
+  cvar95?: number;
   upsideTailProb: number;
   downsideTailProb: number;
+  interquartileRange: [number, number];
   confidence68: [number, number];
   confidence95: [number, number];
 }
@@ -213,8 +215,10 @@ export function calculateStatisticalMoments(
       kurtosis: 3,
       entropy: 0,
       var95: 0,
+      cvar95: 0,
       upsideTailProb: 0,
       downsideTailProb: 0,
+      interquartileRange: [0, 0],
       confidence68: [0, 0],
       confidence95: [0, 0],
     };
@@ -245,28 +249,34 @@ export function calculateStatisticalMoments(
   const skewness = stdDev > 0 ? m3 / Math.pow(stdDev, 3) : 0;
   const kurtosis = stdDev > 0 ? m4 / Math.pow(stdDev, 4) : 3;
 
-  let median = mean;
-  for (let i = 0; i < bins.length; i++) {
-    if (bins[i].cumulativeProb >= 50) {
-      const prevCum = i > 0 ? bins[i - 1].cumulativeProb : 0;
-      const binWeight = bins[i].cumulativeProb - prevCum;
-      const fraction = binWeight > 0 ? (50 - prevCum) / binWeight : 0.5;
-      median = bins[i].lower + fraction * (bins[i].upper - bins[i].lower);
-      break;
+  const interpolatePercentile = (targetPct: number): number => {
+    let runningProb = 0;
+    for (let i = 0; i < bins.length; i++) {
+      const b = bins[i];
+      const prevProb = runningProb;
+      runningProb += b.probability;
+      if (runningProb >= targetPct || i === bins.length - 1) {
+        const binFraction = b.probability > 0 ? (targetPct - prevProb) / b.probability : 0.5;
+        const clampedFraction = Math.max(0, Math.min(1, binFraction));
+        return b.lower + (b.upper - b.lower) * clampedFraction;
+      }
     }
-  }
+    return bins[bins.length - 1].midpoint;
+  };
+
+  const median = interpolatePercentile(50);
+  const p25 = interpolatePercentile(25);
+  const p75 = interpolatePercentile(75);
+  const p16 = interpolatePercentile(16);
+  const p84 = interpolatePercentile(84);
+  const p95 = interpolatePercentile(95);
 
   const modeBin = bins.find((b) => b.isMode) || bins[0];
   const mode = modeBin.midpoint;
   const modeRange = modeBin.rangeDisplay;
 
-  let var95 = bins[bins.length - 1].upper;
-  for (let i = 0; i < bins.length; i++) {
-    if (bins[i].cumulativeProb >= 95) {
-      var95 = bins[i].upper;
-      break;
-    }
-  }
+  const var95 = p95;
+  const cvar95 = Number((var95 + 0.5 * stdDev).toFixed(2));
 
   const upsideTailProb = bins[bins.length - 1]?.probability || 0;
   const downsideTailProb = bins[0]?.probability || 0;
@@ -282,11 +292,13 @@ export function calculateStatisticalMoments(
     kurtosis: Number(kurtosis.toFixed(2)),
     entropy: Number(entropy.toFixed(2)),
     var95: Number(var95.toFixed(2)),
+    cvar95,
     upsideTailProb,
     downsideTailProb,
+    interquartileRange: [Number(p25.toFixed(2)), Number(p75.toFixed(2))],
     confidence68: [
-      Number((mean - stdDev).toFixed(2)),
-      Number((mean + stdDev).toFixed(2)),
+      Number(p16.toFixed(2)),
+      Number(p84.toFixed(2)),
     ],
     confidence95: [
       Number((mean - 1.96 * stdDev).toFixed(2)),
