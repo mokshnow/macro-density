@@ -83,8 +83,4 @@ export interface MacroMarket {
   historicalForecastMean: { timestamp: string; mean: number }[];
   description: string;
   summary: string;
-  lastUpdated: string; // ISO timestamp of when market data was fetched/calculated
-  isLive: boolean; // True if fetched from live Kalshi orderbook, False if reference snapshot
-  isSnapshot?: boolean; // True if using calibrated reference baseline
-  errorMessage?: string;
 }

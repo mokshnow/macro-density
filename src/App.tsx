@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useKalshiLive } from './hooks/useKalshiLive';
+import { INITIAL_MACRO_MARKETS } from './data/mockMarkets';
 import { MacroMarket } from './types/market';
 import { Header } from './components/Header';
 import { MarketSelector } from './components/MarketSelector';
@@ -12,22 +12,16 @@ import { Footer } from './components/Footer';
 import { Analytics } from '@vercel/analytics/react';
 
 export function App() {
-  const {
-    markets,
-    isLiveConnected,
-    isRefreshing,
-    refreshLive,
-    addCustomMarket,
-  } = useKalshiLive();
+  const [markets, setMarkets] = useState<MacroMarket[]>(INITIAL_MACRO_MARKETS);
+  const [selectedMarketId, setSelectedMarketId] = useState<string>(INITIAL_MACRO_MARKETS[0].id);
 
-  const [selectedMarketId, setSelectedMarketId] = useState<string>(markets[0]?.id || 'kxcpiyoy-26aug');
+  // Modals state
   const [isCustomMarketOpen, setIsCustomMarketOpen] = useState<boolean>(false);
 
-  // Fallback to selected market or first available market
   const currentMarket = markets.find((m) => m.id === selectedMarketId) || markets[0];
 
   const handleAddCustomMarket = (newMarket: MacroMarket) => {
-    addCustomMarket(newMarket);
+    setMarkets((prev) => [newMarket, ...prev]);
     setSelectedMarketId(newMarket.id);
   };
 
@@ -36,9 +30,6 @@ export function App() {
       {/* Top Header */}
       <Header
         onOpenCustomMarket={() => setIsCustomMarketOpen(true)}
-        isLiveConnected={isLiveConnected}
-        isRefreshing={isRefreshing}
-        onRefresh={refreshLive}
       />
 
       {/* Main Content Area */}
@@ -47,33 +38,25 @@ export function App() {
         <div className="mb-6">
           <MarketSelector
             markets={markets}
-            selectedMarketId={currentMarket?.id || selectedMarketId}
+            selectedMarketId={selectedMarketId}
             onSelectMarket={setSelectedMarketId}
           />
         </div>
 
         {/* Macro Hero Card */}
-        {currentMarket && (
-          <MacroHeroCard
-            market={currentMarket}
-            isRefreshing={isRefreshing}
-            onRefresh={refreshLive}
-          />
-        )}
+        <MacroHeroCard market={currentMarket} />
 
         {/* Interactive Probability Distribution Visualizer */}
-        {currentMarket && <DensityChart market={currentMarket} />}
+        <DensityChart market={currentMarket} />
 
         {/* Distribution Moments & Tail Risk Parameters */}
-        {currentMarket && (
-          <RiskMomentsCard
-            moments={currentMarket.moments}
-            unitSuffix={currentMarket.unitSuffix}
-          />
-        )}
+        <RiskMomentsCard
+          moments={currentMarket.moments}
+          unitSuffix={currentMarket.unitSuffix}
+        />
 
         {/* Scenario & Tail Hedging Simulator */}
-        {currentMarket && <HedgingSimulator market={currentMarket} />}
+        <HedgingSimulator market={currentMarket} />
       </main>
 
       {/* Footer */}
