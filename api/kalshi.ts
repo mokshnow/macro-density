@@ -485,6 +485,7 @@ function parseKalshiEventToMarket(
       const noAskCents = m.no_ask_dollars ? Math.round(parseFloat(m.no_ask_dollars) * 100) : 100;
 
       const volume = m.volume_fp ? Math.round(parseFloat(m.volume_fp)) : (m.volume || 0);
+      const openInterest = m.open_interest_fp ? Math.round(parseFloat(m.open_interest_fp)) : (m.open_interest || 0);
       const floorStrike = m.floor_strike !== undefined ? parseFloat(m.floor_strike) : (m.strike_level !== undefined ? parseFloat(m.strike_level) : undefined);
       const unitSuffix = meta?.unitSuffix || '%';
       const strikeText = floorStrike !== undefined ? `Above ${floorStrike}${unitSuffix}` : '';
