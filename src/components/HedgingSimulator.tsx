@@ -140,7 +140,7 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
       {showModelInfo && (
         <div className="mb-5 p-4 rounded-xl bg-gray-50 border-2 border-gray-300 text-xs text-gray-700 space-y-2 animate-in fade-in duration-200">
           <div className="font-extrabold text-gray-950 flex items-center gap-2 mb-1">
-            <span>Model Framework & Asymmetric Protection</span>
+            <span>Model Framework & Protection Sizing</span>
           </div>
           <p className="leading-relaxed">
             Estimates required prediction market binary contracts to offset macro event portfolio loss based on duration / delta sensitivity ($/bps) and Kalshi contract pricing:
