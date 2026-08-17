@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { MacroMarket } from '../types/market';
-import { CheckCircle, Info, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { CheckCircle, Info, ChevronDown, ChevronUp, ExternalLink, ShieldAlert } from 'lucide-react';
 
 interface HedgingSimulatorProps {
   market: MacroMarket;
@@ -16,9 +16,41 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
   const [shockBps, setShockBps] = useState<number>(30); // Assumed macro shock in basis points
   const [showModelInfo, setShowModelInfo] = useState<boolean>(false);
 
-  const [targetHedgeStrike, setTargetHedgeStrike] = useState<number>(
-    market.contracts.length > 3 ? (market.contracts[3].floorStrike ?? 3.3) : 3.3
-  );
+  // Target macro level corresponding to the shock: E[X] + (shockBps / 100)
+  const targetShockLevel = useMemo(() => {
+    const base = market.moments?.mean ?? 3.0;
+    return Number((base + shockBps / 100).toFixed(2));
+  }, [market.moments?.mean, shockBps]);
+
+  // Filter for viable hedging strikes: exclude deep ITM contracts (> 75¢) that offer no leverage
+  const eligibleContracts = useMemo(() => {
+    const nonItm = market.contracts.filter(
+      (c) => (c.lastPrice || 0) <= 75 && (c.lastPrice || 0) >= 1
+    );
+    return nonItm.length > 0 ? nonItm : market.contracts;
+  }, [market.contracts]);
+
+  // User manual override for strike choice (reset whenever market changes)
+  const [selectedStrikeOverride, setSelectedStrikeOverride] = useState<number | null>(null);
+
+  useEffect(() => {
+    setSelectedStrikeOverride(null);
+  }, [market.id]);
+
+  // Automatically find best tail hedge contract matching targetShockLevel unless overridden
+  const hedgeContract = useMemo(() => {
+    if (selectedStrikeOverride !== null) {
+      const found = market.contracts.find((c) => c.floorStrike === selectedStrikeOverride);
+      if (found) return found;
+    }
+
+    // Default to the closest OTM tail hedge strike to targetShockLevel
+    return eligibleContracts.reduce((closest, curr) => {
+      const currDiff = Math.abs((curr.floorStrike ?? targetShockLevel) - targetShockLevel);
+      const closestDiff = Math.abs((closest.floorStrike ?? targetShockLevel) - targetShockLevel);
+      return currDiff < closestDiff ? curr : closest;
+    }, eligibleContracts[0] || market.contracts[0]);
+  }, [eligibleContracts, market.contracts, selectedStrikeOverride, targetShockLevel]);
 
   const handlePortfolioChange = (val: string) => {
     const raw = val.replace(/[^0-9]/g, '');
@@ -30,12 +62,6 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
     const num = parseInt(raw, 10);
     setPortfolioSize(num);
     setPortfolioStr(num.toLocaleString());
-  };
-
-  const handlePortfolioBlur = () => {
-    if (!portfolioStr.trim()) {
-      setPortfolioStr(portfolioSize.toLocaleString() || '0');
-    }
   };
 
   const handleSensitivityChange = (val: string) => {
@@ -50,23 +76,9 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
     setSensitivityStr(num.toLocaleString());
   };
 
-  const handleSensitivityBlur = () => {
-    if (!sensitivityStr.trim()) {
-      setSensitivityStr(sensitivityPer10Bps.toLocaleString() || '0');
-    }
-  };
-
-  // Find relevant contract for hedge
-  const hedgeContract = useMemo(() => {
-    return (
-      market.contracts.find((c) => c.floorStrike === targetHedgeStrike) ||
-      market.contracts[Math.floor(market.contracts.length / 2)]
-    );
-  }, [market.contracts, targetHedgeStrike]);
-
   // Calculations
-  const contractCostCents = hedgeContract?.lastPrice || 50;
-  const contractCostDollars = contractCostCents / 100;
+  const contractCostCents = hedgeContract?.lastPrice || 25;
+  const contractCostDollars = Math.max(0.01, contractCostCents / 100);
   const payoutPerContract = 1.0; // Kalshi pays $1.00 if strike event triggers
 
   // Transparent mathematical calculations
@@ -77,6 +89,10 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
   const totalHedgePremium = requiredContracts * contractCostDollars;
   const grossInsurancePayout = requiredContracts * payoutPerContract;
   const netInsuranceCoverage = grossInsurancePayout - totalHedgePremium;
+
+  // Asymmetric payoff leverage: ($1.00 - cost) / cost
+  const leverageRatio = contractCostDollars < 0.99 ? (1.0 - contractCostDollars) / contractCostDollars : 0;
+  const isDeepItm = contractCostCents >= 75;
 
   // Helper to format user-friendly contract strike (e.g. "Above 3.50%")
   const getContractDisplayName = (c?: (typeof market.contracts)[0]) => {
@@ -117,7 +133,7 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
       {showModelInfo && (
         <div className="mb-5 p-4 rounded-xl bg-gray-50 border-2 border-gray-300 text-xs text-gray-700 space-y-2 animate-in fade-in duration-200">
           <div className="font-extrabold text-gray-950 flex items-center gap-2 mb-1">
-            <span>Model Framework & Derivation</span>
+            <span>Model Framework & Asymmetric Protection</span>
           </div>
           <p className="leading-relaxed">
             Estimates required prediction market binary contracts to offset macro event portfolio loss based on duration / delta sensitivity ($/bps) and Kalshi contract pricing:
@@ -129,7 +145,7 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
               = ${sensitivityPer10Bps.toLocaleString()} × ({shockBps} / 10) = <strong>${adverseLoss.toLocaleString()}</strong>
             </div>
             <div className="pt-1 border-t border-gray-200">
-              <span className="font-bold text-gray-900 block mb-1">2. Required Contracts:</span>
+              <span className="font-bold text-gray-900 block mb-1">2. Required Contracts (OTM Convexity):</span>
               Contracts = ⌈ Loss / ($1.00 − Contract Price) ⌉
               = ⌈ ${adverseLoss.toLocaleString()} / ${(netPayoutPerContract).toFixed(2)} ⌉ = <strong>{requiredContracts.toLocaleString()}</strong>
             </div>
@@ -210,8 +226,11 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
             {[10, 20, 30, 50].map((bps) => (
               <button
                 key={bps}
-                onClick={() => setShockBps(bps)}
-                className={`flex-1 py-1 text-xs font-bold font-mono rounded-lg border-2 transition-all ${
+                onClick={() => {
+                  setShockBps(bps);
+                  setSelectedStrikeOverride(null); // Auto-align strike to new shock
+                }}
+                className={`flex-1 py-1 text-xs font-bold font-mono rounded-lg border-2 transition-all cursor-pointer ${
                   shockBps === bps
                     ? 'bg-[#00D26A] text-black border-[#00A854] shadow-xs'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
@@ -229,15 +248,18 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
             Hedge Strike Contract
           </label>
           <select
-            value={targetHedgeStrike}
-            onChange={(e) => setTargetHedgeStrike(parseFloat(e.target.value))}
-            className="w-full px-2 py-1 text-xs font-bold bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A] text-gray-900"
+            value={hedgeContract?.floorStrike ?? ''}
+            onChange={(e) => setSelectedStrikeOverride(parseFloat(e.target.value))}
+            className="w-full px-2 py-1 text-xs font-bold bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A] text-gray-900 cursor-pointer"
           >
-            {market.contracts.map((c) => (
-              <option key={c.ticker} value={c.floorStrike}>
-                {getContractDisplayName(c)} (@ {c.lastPrice}¢ / {c.lastPrice}%)
-              </option>
-            ))}
+            {eligibleContracts.map((c) => {
+              const isBest = c.ticker === hedgeContract?.ticker;
+              return (
+                <option key={c.ticker} value={c.floorStrike}>
+                  {getContractDisplayName(c)} (@ {c.lastPrice}¢ / {c.lastPrice}% prob){isBest ? ' ★ Target' : ''}
+                </option>
+              );
+            })}
           </select>
         </div>
       </div>
@@ -295,8 +317,29 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
               Cost: {contractCostCents}¢/contract
             </div>
           </div>
+
+          <div>
+            <div className="text-[10px] uppercase text-emerald-900 font-bold tracking-wider">
+              Payout Leverage
+            </div>
+            <div className="text-base font-black font-mono text-emerald-950">
+              {leverageRatio > 0 ? `${leverageRatio.toFixed(1)}×` : '1.0×'}
+            </div>
+            <div className="text-[10px] text-emerald-800 font-mono font-semibold">
+              Asymmetric ROI
+            </div>
+          </div>
         </div>
       </div>
+
+      {isDeepItm && (
+        <div className="mt-3 max-w-4xl mx-auto flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-xs text-amber-900">
+          <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0" />
+          <span>
+            <strong>Low Hedging Leverage:</strong> Selected strike is currently in-the-money ({contractCostCents}¢). Capital-efficient tail hedges typically use Out-Of-The-Money strikes (5%–35% probability) for maximum asymmetric payout.
+          </span>
+        </div>
+      )}
     </div>
   );
 };
