@@ -488,13 +488,8 @@ function parseKalshiEventToMarket(
       const openInterest = m.open_interest_fp ? Math.round(parseFloat(m.open_interest_fp)) : (m.open_interest || 0);
       const floorStrike = m.floor_strike !== undefined ? parseFloat(m.floor_strike) : (m.strike_level !== undefined ? parseFloat(m.strike_level) : undefined);
       const unitSuffix = meta?.unitSuffix || '%';
-      const strikeText = floorStrike !== undefined ? `Above ${floorStrike}${unitSuffix}` : '';
-      let title = m.title || m.yes_sub_title;
-      if (!title || title === m.ticker) {
-        title = meta?.title ? `${meta.title} ${strikeText}`.trim() : (strikeText || m.ticker);
-      } else if (meta?.title && (title.toLowerCase().startsWith('above') || title.startsWith('>'))) {
-        title = `${meta.title} (${title})`;
-      }
+      const strikeText = floorStrike !== undefined ? `Above ${floorStrike}${unitSuffix}` : (m.yes_sub_title || m.ticker);
+      const title = strikeText;
 
       return {
         ticker: m.ticker,

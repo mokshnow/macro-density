@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { MacroMarket } from '../types/market';
-import { CheckCircle, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle, Info, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 
 interface HedgingSimulatorProps {
   market: MacroMarket;
@@ -78,20 +78,21 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
   const grossInsurancePayout = requiredContracts * payoutPerContract;
   const netInsuranceCoverage = grossInsurancePayout - totalHedgePremium;
 
-  // Helper to format user-friendly contract name and strike
+  // Helper to format user-friendly contract strike (e.g. "Above 3.50%")
   const getContractDisplayName = (c?: (typeof market.contracts)[0]) => {
     if (!c) return '';
-    if (c.title && c.title !== c.ticker) {
-      if (c.title.toLowerCase().startsWith('above') || c.title.startsWith('>')) {
-        return `${market.title} (${c.title})`;
-      }
-      return c.title;
-    }
     if (c.floorStrike !== undefined) {
-      return `${market.title} (Above ${c.floorStrike}${market.unitSuffix})`;
+      return `Above ${c.floorStrike}${market.unitSuffix}`;
+    }
+    if (c.title && c.title !== c.ticker) {
+      const match = c.title.match(/above\s+([0-9.]+%?)/i);
+      if (match) return `Above ${match[1].includes('%') ? match[1] : `${match[1]}${market.unitSuffix}`}`;
+      return c.title;
     }
     return c.ticker;
   };
+
+  const contractKalshiUrl = market.kalshiUrl || `https://kalshi.com/markets/${(market.ticker || '').toLowerCase()}`;
 
   return (
     <div className="bg-white rounded-2xl border-2 border-black shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-0">
@@ -118,85 +119,101 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
           <div className="font-extrabold text-gray-950 flex items-center gap-2 mb-1">
             <span>Model Framework & Derivation</span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 py-1 font-mono text-[11px]">
-            <div className="p-2.5 bg-white rounded-lg border border-gray-200">
+          <p className="leading-relaxed">
+            Estimates required prediction market binary contracts to offset macro event portfolio loss based on duration / delta sensitivity ($/bps) and Kalshi contract pricing:
+          </p>
+          <div className="bg-white p-3 rounded-lg border border-gray-300 font-mono text-[11px] space-y-1.5 text-gray-900">
+            <div>
               <span className="font-bold text-gray-900 block mb-1">1. Adverse Shock Loss:</span>
-              Loss = (Sensitivity per 10bps / 10) × Shock (bps)
-              <br />
-              = (${(sensitivityPer10Bps / 10).toLocaleString()}/bp) × {shockBps} bps = <strong>${adverseLoss.toLocaleString()}</strong>
+              Loss = Sensitivity ($/10 bps) × (Macro Shock (bps) / 10)
+              = ${sensitivityPer10Bps.toLocaleString()} × ({shockBps} / 10) = <strong>${adverseLoss.toLocaleString()}</strong>
             </div>
-            <div className="p-2.5 bg-white rounded-lg border border-gray-200">
+            <div className="pt-1 border-t border-gray-200">
               <span className="font-bold text-gray-900 block mb-1">2. Required Contracts:</span>
               Contracts = ⌈ Loss / ($1.00 − Contract Price) ⌉
-              <br />
               = ⌈ ${adverseLoss.toLocaleString()} / ${(netPayoutPerContract).toFixed(2)} ⌉ = <strong>{requiredContracts.toLocaleString()}</strong>
             </div>
           </div>
         </div>
       )}
 
-      {/* Simulator Inputs Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+      {/* Interactive Control Inputs Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-5">
         {/* Input 1: Portfolio Size */}
         <div className="p-3.5 rounded-xl bg-gray-50/70 border-2 border-gray-300 hover:border-gray-400 shadow-xs transition-colors">
           <label className="block text-xs font-bold text-gray-800 mb-1">
-            Portfolio Notional (AUM)
+            Portfolio Size (AUM)
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-gray-500 font-mono font-bold text-xs">
-              $
-            </div>
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-xs">$</span>
             <input
               type="text"
-              inputMode="numeric"
               value={portfolioStr}
               onChange={(e) => handlePortfolioChange(e.target.value)}
-              onBlur={handlePortfolioBlur}
+              className="w-full pl-6 pr-2 py-1 text-xs font-mono font-bold bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A] text-gray-900"
               placeholder="5,000,000"
-              className="w-full pl-6 pr-2 py-1 text-xs font-mono font-bold bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
             />
+          </div>
+          <div className="flex gap-1 mt-1.5">
+            {[1000000, 5000000, 25000000].map((size) => (
+              <button
+                key={size}
+                onClick={() => {
+                  setPortfolioSize(size);
+                  setPortfolioStr(size.toLocaleString());
+                }}
+                className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-gray-200/80 hover:bg-gray-300 text-gray-700 transition-colors"
+              >
+                ${(size / 1000000).toFixed(0)}M
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Input 2: Loss per 10 bps */}
+        {/* Input 2: Sensitivity ($/10 bps) */}
         <div className="p-3.5 rounded-xl bg-gray-50/70 border-2 border-gray-300 hover:border-gray-400 shadow-xs transition-colors">
           <label className="block text-xs font-bold text-gray-800 mb-1">
-            Sensitivity (Loss / 10 bps)
+            Loss per 10 bps Shock
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-gray-500 font-mono font-bold text-xs">
-              $
-            </div>
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-xs">$</span>
             <input
               type="text"
-              inputMode="numeric"
               value={sensitivityStr}
               onChange={(e) => handleSensitivityChange(e.target.value)}
-              onBlur={handleSensitivityBlur}
+              className="w-full pl-6 pr-2 py-1 text-xs font-mono font-bold bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A] text-gray-900"
               placeholder="15,000"
-              className="w-full pl-6 pr-2 py-1 text-xs font-mono font-bold bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
             />
+          </div>
+          <div className="flex gap-1 mt-1.5">
+            {[5000, 15000, 50000].map((loss) => (
+              <button
+                key={loss}
+                onClick={() => {
+                  setSensitivityPer10Bps(loss);
+                  setSensitivityStr(loss.toLocaleString());
+                }}
+                className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-gray-200/80 hover:bg-gray-300 text-gray-700 transition-colors"
+              >
+                ${(loss / 1000).toFixed(0)}k
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Input 3: Assumed Shock (bps) */}
+        {/* Input 3: Macro Shock Preset */}
         <div className="p-3.5 rounded-xl bg-gray-50/70 border-2 border-gray-300 hover:border-gray-400 shadow-xs transition-colors">
-          <div className="flex items-center justify-between mb-1">
-            <label className="block text-xs font-bold text-gray-800">
-              Assumed Shock
-            </label>
-            <span className="text-[11px] font-mono font-extrabold text-[#008A45]">
-              +{shockBps} bps
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            {[10, 25, 30, 50].map((bps) => (
+          <label className="block text-xs font-bold text-gray-800 mb-1">
+            Assumed Shock (bps)
+          </label>
+          <div className="flex items-center gap-1.5">
+            {[10, 20, 30, 50].map((bps) => (
               <button
                 key={bps}
                 onClick={() => setShockBps(bps)}
-                className={`flex-1 py-1 text-[11px] font-mono font-bold rounded border transition-colors cursor-pointer ${
+                className={`flex-1 py-1 text-xs font-bold font-mono rounded-lg border-2 transition-all ${
                   shockBps === bps
-                    ? 'bg-gray-900 text-white border-gray-900 shadow-2xs'
+                    ? 'bg-[#00D26A] text-black border-[#00A854] shadow-xs'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
                 }`}
               >
@@ -234,9 +251,16 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
           <div>
             <div className="text-xs sm:text-sm font-semibold text-gray-900 leading-tight">
               Buy <strong className="font-mono text-gray-950 font-extrabold">{requiredContracts.toLocaleString()}</strong> contracts of{' '}
-              <span className="font-bold text-emerald-950 bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 rounded">
-                {getContractDisplayName(hedgeContract)}
-              </span>
+              <a
+                href={contractKalshiUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 font-bold text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 px-1.5 py-0.5 rounded transition-all hover:shadow-xs underline decoration-emerald-700/40 hover:decoration-emerald-900 cursor-pointer"
+                title={`Open ${getContractDisplayName(hedgeContract)} on Kalshi`}
+              >
+                <span>{getContractDisplayName(hedgeContract)}</span>
+                <ExternalLink className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+              </a>
             </div>
             <div className="text-xs text-gray-700 mt-1 font-medium">
               Covers simulated <strong className="font-mono text-gray-950 font-bold">${adverseLoss.toLocaleString()}</strong> adverse loss (+{shockBps} bps shock) with <strong className="font-mono text-emerald-950 font-bold">${netInsuranceCoverage.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong> net tail payoff.
