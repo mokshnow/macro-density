@@ -78,6 +78,21 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
   const grossInsurancePayout = requiredContracts * payoutPerContract;
   const netInsuranceCoverage = grossInsurancePayout - totalHedgePremium;
 
+  // Helper to format user-friendly contract name and strike
+  const getContractDisplayName = (c?: (typeof market.contracts)[0]) => {
+    if (!c) return '';
+    if (c.title && c.title !== c.ticker) {
+      if (c.title.toLowerCase().startsWith('above') || c.title.startsWith('>')) {
+        return `${market.title} (${c.title})`;
+      }
+      return c.title;
+    }
+    if (c.floorStrike !== undefined) {
+      return `${market.title} (Above ${c.floorStrike}${market.unitSuffix})`;
+    }
+    return c.ticker;
+  };
+
   return (
     <div className="bg-white rounded-2xl border-2 border-black shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b-2 border-gray-300 mb-5">
@@ -199,11 +214,11 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
           <select
             value={targetHedgeStrike}
             onChange={(e) => setTargetHedgeStrike(parseFloat(e.target.value))}
-            className="w-full px-2 py-1 text-xs font-mono font-bold bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
+            className="w-full px-2 py-1 text-xs font-bold bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A] text-gray-900"
           >
             {market.contracts.map((c) => (
               <option key={c.ticker} value={c.floorStrike}>
-                {c.ticker} (&gt; {c.floorStrike}{market.unitSuffix} @ {c.lastPrice}¢)
+                {getContractDisplayName(c)} (@ {c.lastPrice}¢ / {c.lastPrice}%)
               </option>
             ))}
           </select>
@@ -219,7 +234,9 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
           <div>
             <div className="text-xs sm:text-sm font-semibold text-gray-900 leading-tight">
               Buy <strong className="font-mono text-gray-950 font-extrabold">{requiredContracts.toLocaleString()}</strong> contracts of{' '}
-              <span className="font-mono font-bold text-emerald-900 bg-emerald-100 px-1.5 py-0.5 rounded">{hedgeContract?.ticker}</span>
+              <span className="font-bold text-emerald-950 bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 rounded">
+                {getContractDisplayName(hedgeContract)}
+              </span>
             </div>
             <div className="text-xs text-gray-700 mt-1 font-medium">
               Covers simulated <strong className="font-mono text-gray-950 font-bold">${adverseLoss.toLocaleString()}</strong> adverse loss (+{shockBps} bps shock) with <strong className="font-mono text-emerald-950 font-bold">${netInsuranceCoverage.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong> net tail payoff.
