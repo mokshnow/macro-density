@@ -22,12 +22,19 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
     return Number((base + shockBps / 100).toFixed(2));
   }, [market.moments?.mean, shockBps]);
 
-  // Filter for viable hedging strikes: exclude deep ITM contracts (> 75¢) that offer no leverage
+  // Restrict hedging strikes strictly to the realistic 40% – 75% probability band (40¢ to 75¢)
+  // Eliminates both deep ITM contracts (>75%) and extreme long-haul unlikely lotteries (<40%).
   const eligibleContracts = useMemo(() => {
-    const nonItm = market.contracts.filter(
-      (c) => (c.lastPrice || 0) <= 75 && (c.lastPrice || 0) >= 1
+    const inRange = market.contracts.filter(
+      (c) => (c.lastPrice || 0) >= 40 && (c.lastPrice || 0) <= 75
     );
-    return nonItm.length > 0 ? nonItm : market.contracts;
+    if (inRange.length > 0) return inRange;
+
+    // Fallback if no contract falls strictly in 40-75 (e.g. sparse custom market):
+    const sortedByDistFrom50 = [...market.contracts].sort(
+      (a, b) => Math.abs((a.lastPrice || 50) - 50) - Math.abs((b.lastPrice || 50) - 50)
+    );
+    return sortedByDistFrom50.slice(0, 3);
   }, [market.contracts]);
 
   // User manual override for strike choice (reset whenever market changes)
@@ -37,14 +44,14 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
     setSelectedStrikeOverride(null);
   }, [market.id]);
 
-  // Automatically find best tail hedge contract matching targetShockLevel unless overridden
+  // Automatically find best hedge contract matching targetShockLevel within the 40%-75% range
   const hedgeContract = useMemo(() => {
     if (selectedStrikeOverride !== null) {
       const found = market.contracts.find((c) => c.floorStrike === selectedStrikeOverride);
       if (found) return found;
     }
 
-    // Default to the closest OTM tail hedge strike to targetShockLevel
+    // Default to the closest strike to targetShockLevel within the 40%-75% eligible contracts
     return eligibleContracts.reduce((closest, curr) => {
       const currDiff = Math.abs((curr.floorStrike ?? targetShockLevel) - targetShockLevel);
       const closestDiff = Math.abs((closest.floorStrike ?? targetShockLevel) - targetShockLevel);
@@ -336,7 +343,7 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
         <div className="mt-3 max-w-4xl mx-auto flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-xs text-amber-900">
           <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0" />
           <span>
-            <strong>Low Hedging Leverage:</strong> Selected strike is currently in-the-money ({contractCostCents}¢). Capital-efficient tail hedges typically use Out-Of-The-Money strikes (5%–35% probability) for maximum asymmetric payout.
+            <strong>Sub-Optimal Hedge Band:</strong> Selected strike is priced at {contractCostCents}¢. Effective macro hedges use contracts in the <strong>40%–75%</strong> probability range to avoid deep ITM capital lockup and extreme low-probability lotteries.
           </span>
         </div>
       )}
