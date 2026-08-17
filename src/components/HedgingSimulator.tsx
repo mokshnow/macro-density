@@ -332,9 +332,6 @@ export const HedgingSimulator: React.FC<HedgingSimulatorProps> = ({ market }) =>
             <div className="text-base font-black font-mono text-emerald-950">
               {leverageRatio > 0 ? `${leverageRatio.toFixed(1)}×` : '1.0×'}
             </div>
-            <div className="text-[10px] text-emerald-800 font-mono font-semibold">
-              Asymmetric ROI
-            </div>
           </div>
         </div>
       </div>
