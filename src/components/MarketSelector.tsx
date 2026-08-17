@@ -21,6 +21,7 @@ export const MarketSelector: React.FC<MarketSelectorProps> = ({
         return <TrendingUp className="w-3.5 h-3.5" />;
       case 'labor':
         return <Briefcase className="w-3.5 h-3.5" />;
+      case 'fed':
       case 'rates':
         return <DollarSign className="w-3.5 h-3.5" />;
       default:
@@ -30,7 +31,7 @@ export const MarketSelector: React.FC<MarketSelectorProps> = ({
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {markets.map((market) => {
           const isSelected = market.id === selectedMarketId;
           return (

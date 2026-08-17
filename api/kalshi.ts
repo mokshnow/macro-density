@@ -391,6 +391,30 @@ const CORE_EVENTS: {
       { timestamp: 'Aug 08', mean: 4.26, median: 4.25, stdDev: 0.13, confidence68: [4.13, 4.39], consensus: 4.25 },
     ],
   },
+  {
+    id: 'kxfedfundsyear-28jan01',
+    category: 'fed',
+    defaultEventTicker: 'KXFEDFUNDSYEAR-28JAN01',
+    seriesTicker: 'KXFEDFUNDSYEAR',
+    title: 'Fed Funds Rate at Year-End 2027',
+    subtitle: 'December 31, 2027 FOMC Policy Target Rate',
+    unit: '%',
+    unitSuffix: '%',
+    sourceAgency: 'Federal Reserve Board of Governors',
+    kalshiUrl: 'https://kalshi.com/markets/kxfedfundsyear/fed-funds-rate-at-year-end/kxfedfundsyear-28jan01',
+    consensus: [
+      { source: 'FOMC Median SEP (Dot Plot)', value: 3.88, date: 'Jun 2026', differenceFromKalshiMode: 0.20 },
+      { source: 'CME FedWatch Implied', value: 4.10, date: 'Aug 15, 2026', differenceFromKalshiMode: -0.02 },
+      { source: 'Primary Dealer Survey', value: 4.00, date: 'Aug 10, 2026', differenceFromKalshiMode: 0.08 },
+    ],
+    historicalSnapshots: [
+      { timestamp: 'May 2026', mean: 4.55, median: 4.50, stdDev: 0.65, confidence68: [3.90, 5.20], consensus: 4.25 },
+      { timestamp: 'Jun 2026', mean: 4.38, median: 4.35, stdDev: 0.60, confidence68: [3.78, 4.98], consensus: 4.15 },
+      { timestamp: 'Jul 2026', mean: 4.22, median: 4.20, stdDev: 0.55, confidence68: [3.67, 4.77], consensus: 4.00 },
+      { timestamp: 'Aug 01', mean: 4.14, median: 4.10, stdDev: 0.52, confidence68: [3.62, 4.66], consensus: 3.90 },
+      { timestamp: 'Aug 08', mean: 4.10, median: 4.05, stdDev: 0.50, confidence68: [3.60, 4.60], consensus: 3.88 },
+    ],
+  },
 ];
 
 let memoryCache: { timestamp: number; data: any } | null = null;
