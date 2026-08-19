@@ -27,6 +27,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('smooth_pdf');
   const [hoveredBin, setHoveredBin] = useState<DistributionBin | null>(null);
 
+
+
   // Interactive Graph Line / Overlay Visibility Toggles
   const [showMeanPin, setShowMeanPin] = useState<boolean>(true); // E[X] Indicator
   const [showConsensusPin, setShowConsensusPin] = useState<boolean>(true); // Consensus Benchmark
@@ -198,16 +200,16 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
     return ticks;
   }, [bins, minX, maxX, rangeX]);
 
-  // Historical Snapshots computation
+  // Historical Snapshots computation (no fabricated prior points)
   const histSnapshots = useMemo(() => {
     if (market.historicalSnapshots && market.historicalSnapshots.length > 0) {
       return market.historicalSnapshots;
     }
     return [
-      { timestamp: 'Prior', mean: Number((moments.mean - 0.05).toFixed(2)), stdDev: 0.18, confidence68: [Number((moments.mean - 0.23).toFixed(2)), Number((moments.mean + 0.13).toFixed(2))] as [number, number], consensus: consensusVal || moments.mean },
-      { timestamp: 'Current', mean: moments.mean, stdDev: moments.stdDev, confidence68: moments.confidence68, consensus: consensusVal || moments.mean },
+      { timestamp: 'Live Order Book', mean: moments.mean, stdDev: moments.stdDev, confidence68: moments.confidence68, consensus: consensusVal || undefined },
     ];
   }, [market.historicalSnapshots, moments, consensusVal]);
+
 
   const histPoints = useMemo(() => {
     return histSnapshots.map((s, idx) => ({
@@ -229,8 +231,12 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
     return { min: Number((min - pad).toFixed(2)), max: Number((max + pad).toFixed(2)) };
   }, [histPoints]);
 
-  const scaleHistX = (idx: number) => padding.left + (idx / Math.max(1, histPoints.length - 1)) * graphWidth;
+  const scaleHistX = (idx: number) =>
+    histPoints.length === 1
+      ? padding.left + graphWidth / 2
+      : padding.left + (idx / Math.max(1, histPoints.length - 1)) * graphWidth;
   const scaleHistY = (val: number) => padding.top + graphHeight - ((val - histYBounds.min) / Math.max(0.01, histYBounds.max - histYBounds.min)) * graphHeight;
+
 
   // Path for uncertainty band in Historical View
   const histBandPath = useMemo(() => {
@@ -342,6 +348,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
     d += ` L ${scaleX(smoothedPoints[smoothedPoints.length - 1].x)} ${bottomY} L ${scaleX(smoothedPoints[0].x)} ${bottomY} Z`;
     return d;
   }, [smoothedPoints, minX, rangeX]);
+
 
   // Highlighted [X, Y] Slice Area Path
   const intervalSlicePathData = useMemo(() => {
@@ -567,6 +574,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
       {/* Main SVG Graph Container */}
       <div className="relative w-full overflow-hidden my-3">
         <svg
+
           ref={svgRef}
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
           className="w-full h-auto cursor-crosshair select-none"
@@ -601,9 +609,11 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
             </linearGradient>
           </defs>
 
+
           {/* Grid lines (Horizontal) */}
           {viewMode !== 'historical_shift' ? (
             [0, 25, 50, 75, 100].map((level) => {
+
               const yPos = scaleYDensity(level);
               return (
                 <g key={`grid-${level}`}>
@@ -812,7 +822,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                   onMouseDown={(e) => {
                     e.stopPropagation();
                     setIsDragging(true);
-                    setDragTarget(intervalX > intervalY ? 'x' : 'y');
+                    setDragTarget(intervalX <= intervalY ? 'y' : 'x');
                   }}
                 >
                   {/* Invisible wide hitbox for easy clicking & dragging */}
@@ -906,6 +916,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                   </text>
                 </g>
               )}
+
 
               {showConsensusPin && consensusVal !== null && (
                 <g transform={`translate(${scaleX(consensusVal)}, ${padding.top - 10})`}>

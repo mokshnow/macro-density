@@ -1,107 +1,273 @@
-import { DistributionBin, StatisticalMoments, StrikeContract } from '../types/market';
+import { DistributionBin, StatisticalMoments, StrikeContract, ArbitrageOpportunity, PricingMethodology } from '../types/market';
+
+/**
+ * Resolves the effective price in cents for a contract based on order book state.
+ * Uses Bid/Ask Midpoint as primary standard or Last Traded Price when configured.
+ */
+export function resolveContractPrice(
+  contract: StrikeContract,
+  methodology: PricingMethodology = 'midpoint'
+): { price: number; isEstimated: boolean } {
+  const { yesBid, yesAsk, lastPrice } = contract;
+
+  if (methodology === 'midpoint') {
+    // If a valid two-sided quote exists (e.g. bid=32, ask=36)
+    if (yesBid > 0 && yesAsk < 100 && yesAsk >= yesBid) {
+      return { price: (yesBid + yesAsk) / 2, isEstimated: false };
+    }
+    // If one-sided bid exists
+    if (yesBid > 0 && yesAsk >= 100) {
+      return { price: yesBid, isEstimated: false };
+    }
+    // If one-sided ask exists
+    if (yesBid <= 0 && yesAsk < 100) {
+      return { price: yesAsk, isEstimated: false };
+    }
+    // Fall back to last traded price if within sensible bounds
+    if (lastPrice > 0 && lastPrice < 100) {
+      return { price: lastPrice, isEstimated: false };
+    }
+  } else {
+    // Last traded price methodology
+    if (lastPrice > 0 && lastPrice < 100) {
+      return { price: lastPrice, isEstimated: false };
+    }
+    if (yesBid > 0 && yesAsk < 100 && yesAsk >= yesBid) {
+      return { price: (yesBid + yesAsk) / 2, isEstimated: false };
+    }
+  }
+
+  // If contract has zero bids, zero asks, and no trades, it is unquoted
+  return { price: -1, isEstimated: true };
+}
+
+/**
+ * Validates cumulative probabilities and enforces monotonicity via Pool-Adjacent-Violators Algorithm (PAVA).
+ * Detects any crossed strike inversions P(X >= K1) < P(X >= K2) for K1 < K2 (arbitrage violations)
+ * and returns both the flagged ArbitrageOpportunity list and the monotone reconstructed probabilities.
+ */
+export function enforceMonotonicCumulative(
+  contracts: StrikeContract[],
+  methodology: PricingMethodology = 'midpoint'
+): {
+  sortedContracts: StrikeContract[];
+  rawCumulative: number[];
+  monotoneCumulative: number[];
+  arbitrageOpportunities: ArbitrageOpportunity[];
+  hasIlliquidStrikes: boolean;
+} {
+  // Sort ascending by floor strike
+  const sorted = [...contracts].sort((a, b) => (a.floorStrike ?? 0) - (b.floorStrike ?? 0));
+  if (sorted.length === 0) {
+    return { sortedContracts: [], rawCumulative: [], monotoneCumulative: [], arbitrageOpportunities: [], hasIlliquidStrikes: false };
+  }
+
+  let hasIlliquid = false;
+  const rawCumulative: number[] = [];
+
+  // 1. Resolve raw prices
+  for (let i = 0; i < sorted.length; i++) {
+    const c = sorted[i];
+    const { price, isEstimated } = resolveContractPrice(c, methodology);
+    if (isEstimated || price < 0) {
+      hasIlliquid = true;
+      c.isIlliquid = true;
+      c.isEstimated = true;
+    } else {
+      c.midpointPrice = c.yesBid > 0 && c.yesAsk < 100 ? (c.yesBid + c.yesAsk) / 2 : c.lastPrice;
+    }
+    rawCumulative.push(price);
+  }
+
+  // 2. Interpolate unquoted illiquid strikes monotonically between neighbors
+  for (let i = 0; i < rawCumulative.length; i++) {
+    if (rawCumulative[i] < 0) {
+      // Find left valid
+      let leftVal = 100;
+      for (let j = i - 1; j >= 0; j--) {
+        if (rawCumulative[j] >= 0) {
+          leftVal = rawCumulative[j];
+          break;
+        }
+      }
+      // Find right valid
+      let rightVal = 0;
+      for (let j = i + 1; j < rawCumulative.length; j++) {
+        if (rawCumulative[j] >= 0) {
+          rightVal = rawCumulative[j];
+          break;
+        }
+      }
+      rawCumulative[i] = Number(((leftVal + rightVal) / 2).toFixed(1));
+    }
+  }
+
+  // 3. Detect Arbitrage Inversions: For cumulative binary calls P(X >= K), P must be non-increasing with K.
+  const arbitrageOpportunities: ArbitrageOpportunity[] = [];
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const k1 = sorted[i].floorStrike ?? 0;
+    const k2 = sorted[i + 1].floorStrike ?? 0;
+    const p1 = rawCumulative[i];
+    const p2 = rawCumulative[i + 1];
+
+    if (p1 < p2) {
+      const spreadViolation = Number((p1 - p2).toFixed(1));
+      arbitrageOpportunities.push({
+        lowerStrike: k1,
+        upperStrike: k2,
+        lowerPrice: p1,
+        upperPrice: p2,
+        spreadViolation,
+        description: `Strike ${k1} priced at ${p1}¢ is below Strike ${k2} at ${p2}¢ (${Math.abs(spreadViolation)}¢ calendar inversion).`,
+      });
+    }
+  }
+
+  // 4. Apply PAVA (Pool Adjacent Violators Algorithm) for isotonic non-increasing regression
+  // Target: y_0 >= y_1 >= ... >= y_n
+  // Equivalent to isotonic non-decreasing on -y
+  const n = rawCumulative.length;
+  const blocks: { weight: number; value: number; indices: number[] }[] = [];
+
+  for (let i = 0; i < n; i++) {
+    blocks.push({ weight: 1, value: rawCumulative[i], indices: [i] });
+
+    // Pool while violation exists: current block value > previous block value (since we want non-increasing)
+    while (blocks.length > 1 && blocks[blocks.length - 1].value > blocks[blocks.length - 2].value) {
+      const b2 = blocks.pop()!;
+      const b1 = blocks.pop()!;
+      const totalWeight = b1.weight + b2.weight;
+      const avgValue = (b1.value * b1.weight + b2.value * b2.weight) / totalWeight;
+      blocks.push({
+        weight: totalWeight,
+        value: avgValue,
+        indices: [...b1.indices, ...b2.indices],
+      });
+    }
+  }
+
+  const monotoneCumulative = new Array(n).fill(0);
+  for (const block of blocks) {
+    for (const idx of block.indices) {
+      monotoneCumulative[idx] = Number(Math.max(0, Math.min(100, block.value)).toFixed(2));
+    }
+  }
+
+  return {
+    sortedContracts: sorted,
+    rawCumulative,
+    monotoneCumulative,
+    arbitrageOpportunities,
+    hasIlliquidStrikes: hasIlliquid,
+  };
+}
 
 /**
  * Calculates discrete probability mass function (PMF) bins from cumulative Kalshi strikes.
- * Example:
- * P(CPI > 3.2%) = 89%
- * P(CPI > 3.3%) = 59%
- * P(CPI > 3.4%) = 18%
- * => P(<= 3.2%) = 11%
- * => P(3.2% < CPI <= 3.3%) = 30%
- * => P(3.3% < CPI <= 3.4%) = 41%
- * => P(> 3.4%) = 18%
+ * Strictly derives non-negative density buckets without arbitrary 50% guesses.
  */
 export function deriveBinsFromCumulativeStrikes(
   contracts: StrikeContract[],
-  unitSuffix: string = '%'
-): DistributionBin[] {
-  // Sort contracts by floor strike ascending
-  const sorted = [...contracts].sort((a, b) => (a.floorStrike ?? 0) - (b.floorStrike ?? 0));
-  
-  if (sorted.length === 0) return [];
+  unitSuffix: string = '%',
+  methodology: PricingMethodology = 'midpoint'
+): {
+  bins: DistributionBin[];
+  arbitrageOpportunities: ArbitrageOpportunity[];
+  hasIlliquidStrikes: boolean;
+} {
+  const { sortedContracts, monotoneCumulative, arbitrageOpportunities, hasIlliquidStrikes } =
+    enforceMonotonicCumulative(contracts, methodology);
+
+  if (sortedContracts.length === 0) {
+    return { bins: [], arbitrageOpportunities: [], hasIlliquidStrikes: false };
+  }
 
   const bins: DistributionBin[] = [];
-  const first = sorted[0];
-  const step = sorted.length > 1 && sorted[1].floorStrike && sorted[0].floorStrike
-    ? (sorted[1].floorStrike - sorted[0].floorStrike)
-    : 0.1;
+  const first = sortedContracts[0];
+  const step =
+    sortedContracts.length > 1 && sortedContracts[1].floorStrike !== undefined && sortedContracts[0].floorStrike !== undefined
+      ? sortedContracts[1].floorStrike - sortedContracts[0].floorStrike
+      : 0.1;
 
   // Left tail: Outcome <= lowest strike
   const lowestStrike = first.floorStrike ?? 0;
-  const leftTailProb = Math.max(0, 100 - first.lastPrice);
+  const pAboveFirst = monotoneCumulative[0];
+  const leftTailProb = Math.max(0, 100 - pAboveFirst);
+
   bins.push({
-    id: `bin-left-tail`,
+    id: 'bin-left-tail',
     label: `< ${lowestStrike.toFixed(1)}${unitSuffix}`,
     rangeDisplay: `≤ ${lowestStrike.toFixed(1)}${unitSuffix}`,
-    lower: lowestStrike - step * 1.5,
-    upper: lowestStrike,
-    midpoint: lowestStrike - step * 0.5,
-    probability: Number(leftTailProb.toFixed(1)),
-    cumulativeProb: Number(leftTailProb.toFixed(1)),
+    lower: Number((lowestStrike - step * 1.5).toFixed(2)),
+    upper: Number(lowestStrike.toFixed(2)),
+    midpoint: Number((lowestStrike - step * 0.5).toFixed(2)),
+    probability: Number(leftTailProb.toFixed(2)),
+    cumulativeProb: Number(leftTailProb.toFixed(2)),
     isMode: false,
     isTail: true,
     tailDirection: 'left',
     delta24h: first.priceChange24h ? -first.priceChange24h : 0,
   });
 
-  // Intermediate intervals
-  for (let i = 0; i < sorted.length - 1; i++) {
-    const current = sorted[i];
-    const next = sorted[i + 1];
+  // Intermediate strike buckets: P(K_i < X <= K_{i+1}) = P(X >= K_i) - P(X >= K_{i+1})
+  for (let i = 0; i < sortedContracts.length - 1; i++) {
+    const current = sortedContracts[i];
+    const next = sortedContracts[i + 1];
     const lower = current.floorStrike ?? 0;
     const upper = next.floorStrike ?? lower + step;
-    const prob = Math.max(0, current.lastPrice - next.lastPrice);
+    const prob = Math.max(0, monotoneCumulative[i] - monotoneCumulative[i + 1]);
 
     bins.push({
       id: `bin-${i}`,
       label: `${lower.toFixed(1)}${unitSuffix} – ${upper.toFixed(1)}${unitSuffix}`,
       rangeDisplay: `${lower.toFixed(1)}${unitSuffix} to ${upper.toFixed(1)}${unitSuffix}`,
-      lower,
-      upper,
-      midpoint: (lower + upper) / 2,
-      probability: Number(prob.toFixed(1)),
-      cumulativeProb: 0, // calculated in second pass
+      lower: Number(lower.toFixed(2)),
+      upper: Number(upper.toFixed(2)),
+      midpoint: Number(((lower + upper) / 2).toFixed(2)),
+      probability: Number(prob.toFixed(2)),
+      cumulativeProb: 0, // computed during normalization pass
       isMode: false,
       isTail: false,
-      delta24h: current.priceChange24h - (next.priceChange24h || 0),
+      delta24h: (current.priceChange24h || 0) - (next.priceChange24h || 0),
       yesContractTicker: current.ticker,
-      marketPrice: current.lastPrice,
+      marketPrice: monotoneCumulative[i],
     });
   }
 
   // Right tail: Outcome > highest strike
-  const last = sorted[sorted.length - 1];
+  const last = sortedContracts[sortedContracts.length - 1];
   const highestStrike = last.floorStrike ?? 0;
-  const rightTailProb = Math.max(0, last.lastPrice);
+  const rightTailProb = Math.max(0, monotoneCumulative[monotoneCumulative.length - 1]);
+
   bins.push({
-    id: `bin-right-tail`,
+    id: 'bin-right-tail',
     label: `> ${highestStrike.toFixed(1)}${unitSuffix}`,
     rangeDisplay: `> ${highestStrike.toFixed(1)}${unitSuffix}`,
-    lower: highestStrike,
-    upper: highestStrike + step * 1.5,
-    midpoint: highestStrike + step * 0.5,
-    probability: Number(rightTailProb.toFixed(1)),
+    lower: Number(highestStrike.toFixed(2)),
+    upper: Number((highestStrike + step * 1.5).toFixed(2)),
+    midpoint: Number((highestStrike + step * 0.5).toFixed(2)),
+    probability: Number(rightTailProb.toFixed(2)),
     cumulativeProb: 100,
     isMode: false,
     isTail: true,
     tailDirection: 'right',
-    delta24h: last.priceChange24h,
+    delta24h: last.priceChange24h || 0,
     yesContractTicker: last.ticker,
-    marketPrice: last.lastPrice,
+    marketPrice: rightTailProb,
   });
 
-  // Normalize probabilities so sum is 100%
+  // Normalize discrete probabilities to sum to exactly 100%
   const rawSum = bins.reduce((acc, b) => acc + b.probability, 0);
   if (rawSum > 0) {
     let runningCumulative = 0;
     bins.forEach((bin) => {
-      bin.probability = Number(((bin.probability / rawSum) * 100).toFixed(1));
+      bin.probability = Number(((bin.probability / rawSum) * 100).toFixed(2));
       runningCumulative += bin.probability;
-      bin.cumulativeProb = Number(Math.min(100, runningCumulative).toFixed(1));
+      bin.cumulativeProb = Number(Math.min(100, runningCumulative).toFixed(2));
     });
   }
 
-  // Identify the mode (highest probability bin)
+  // Identify peak modal outcome
   let maxProb = -1;
   let modeIndex = -1;
   bins.forEach((b, idx) => {
@@ -115,11 +281,16 @@ export function deriveBinsFromCumulativeStrikes(
     bins[modeIndex].isMode = true;
   }
 
-  return bins;
+  return {
+    bins,
+    arbitrageOpportunities,
+    hasIlliquidStrikes,
+  };
 }
 
 /**
- * Calculates statistical moments (Expected Value, Volatility, Skewness, Kurtosis, VaR) from PMF bins.
+ * Calculates statistical moments, quantile bands, true CVaR Expected Shortfall,
+ * Shannon Entropy, and tail integrals from PMF bins.
  */
 export function calculateStatisticalMoments(
   bins: DistributionBin[],
@@ -130,11 +301,12 @@ export function calculateStatisticalMoments(
       mean: 0,
       median: 0,
       mode: 0,
-      modeRange: '0%',
+      modeRange: '0' + unitSuffix,
       stdDev: 0,
       variance: 0,
       skewness: 0,
       kurtosis: 0,
+      entropy: 0,
       var95: 0,
       cvar95: 0,
       upsideTailProb: 0,
@@ -150,10 +322,10 @@ export function calculateStatisticalMoments(
   const totalProb = bins.reduce((sum, b) => sum + b.probability, 0);
   const weights = bins.map((b) => b.probability / (totalProb || 1));
 
-  // 1. Mean (Expected Value)
+  // 1. Mean (Expected Value E[X])
   const mean = bins.reduce((sum, b, i) => sum + b.midpoint * weights[i], 0);
 
-  // 2. Variance and Standard Deviation
+  // 2. Variance & Standard Deviation
   const variance = bins.reduce((sum, b, i) => sum + Math.pow(b.midpoint - mean, 2) * weights[i], 0);
   const stdDev = Math.sqrt(variance);
 
@@ -161,16 +333,25 @@ export function calculateStatisticalMoments(
   const m3 = bins.reduce((sum, b, i) => sum + Math.pow(b.midpoint - mean, 3) * weights[i], 0);
   const skewness = stdDev > 0 ? m3 / Math.pow(stdDev, 3) : 0;
 
-  // 4. Kurtosis (Excess)
+  // 4. Excess Kurtosis
   const m4 = bins.reduce((sum, b, i) => sum + Math.pow(b.midpoint - mean, 4) * weights[i], 0);
   const kurtosis = stdDev > 0 ? m4 / Math.pow(stdDev, 4) - 3 : 0;
 
-  // Mode
+  // 5. Shannon Differential Entropy (in bits)
+  let entropy = 0;
+  bins.forEach((b) => {
+    const p = b.probability / 100;
+    if (p > 0) {
+      entropy -= p * Math.log2(p);
+    }
+  });
+
+  // Modal Peak
   const modeBin = bins.find((b) => b.isMode) || bins[0];
   const mode = modeBin.midpoint;
   const modeRange = modeBin.label;
 
-  // Interpolate Percentiles from CDF
+  // Continuous Quantile Interpolation from cumulative distribution
   const interpolatePercentile = (targetPct: number): number => {
     let runningProb = 0;
     for (let i = 0; i < bins.length; i++) {
@@ -186,6 +367,7 @@ export function calculateStatisticalMoments(
     return bins[bins.length - 1].midpoint;
   };
 
+  const p025 = interpolatePercentile(2.5);
   const p05 = interpolatePercentile(5);
   const p16 = interpolatePercentile(16);
   const median = interpolatePercentile(50);
@@ -193,22 +375,36 @@ export function calculateStatisticalMoments(
   const p75 = interpolatePercentile(75);
   const p84 = interpolatePercentile(84);
   const p95 = interpolatePercentile(95);
+  const p975 = interpolatePercentile(97.5);
 
-  // Value at Risk & CVaR (e.g. adverse right-tail for inflation / adverse left-tail for GDP)
   const var95 = p95;
-  
-  // Conditional VaR (Expected shortfall in top 5% tail)
+
+  // 6. True Conditional Value at Risk (CVaR95 / Expected Shortfall): E[X | X >= VaR95]
   let cvarSum = 0;
   let cvarWeight = 0;
-  bins.forEach((b, i) => {
-    if (b.upper >= p95) {
-      cvarSum += b.midpoint * weights[i];
-      cvarWeight += weights[i];
+
+  bins.forEach((b) => {
+    if (b.upper > var95) {
+      if (b.lower >= var95) {
+        // Entire bin is above VaR95
+        const w = b.probability / 100;
+        cvarSum += b.midpoint * w;
+        cvarWeight += w;
+      } else {
+        // Bin straddles VaR95: interpolate fraction strictly above VaR95
+        const span = b.upper - b.lower;
+        const fraction = span > 0 ? (b.upper - var95) / span : 1;
+        const subMidpoint = (var95 + b.upper) / 2;
+        const w = (b.probability / 100) * fraction;
+        cvarSum += subMidpoint * w;
+        cvarWeight += w;
+      }
     }
   });
-  const cvar95 = cvarWeight > 0 ? cvarSum / cvarWeight : p95;
 
-  // Upside and Downside Tail Probs (> +1.5 stdDev / < -1.5 stdDev)
+  const cvar95 = cvarWeight > 0 ? cvarSum / cvarWeight : var95;
+
+  // 7. Rigorous Tail Probabilities (> mean + 1.5*stdDev and < mean - 1.5*stdDev)
   const highThreshold = mean + 1.5 * stdDev;
   const lowThreshold = mean - 1.5 * stdDev;
 
@@ -216,8 +412,23 @@ export function calculateStatisticalMoments(
   let downsideTailProb = 0;
 
   bins.forEach((b) => {
-    if (b.midpoint >= highThreshold) upsideTailProb += b.probability;
-    if (b.midpoint <= lowThreshold) downsideTailProb += b.probability;
+    // Upper tail mass
+    if (b.lower >= highThreshold) {
+      upsideTailProb += b.probability;
+    } else if (b.upper > highThreshold) {
+      const span = b.upper - b.lower;
+      const frac = span > 0 ? (b.upper - highThreshold) / span : 0;
+      upsideTailProb += b.probability * frac;
+    }
+
+    // Lower tail mass
+    if (b.upper <= lowThreshold) {
+      downsideTailProb += b.probability;
+    } else if (b.lower < lowThreshold) {
+      const span = b.upper - b.lower;
+      const frac = span > 0 ? (lowThreshold - b.lower) / span : 0;
+      downsideTailProb += b.probability * frac;
+    }
   });
 
   return {
@@ -229,14 +440,15 @@ export function calculateStatisticalMoments(
     variance: Number(variance.toFixed(4)),
     skewness: Number(skewness.toFixed(2)),
     kurtosis: Number(kurtosis.toFixed(2)),
+    entropy: Number(entropy.toFixed(2)),
     var95: Number(var95.toFixed(2)),
     cvar95: Number(cvar95.toFixed(2)),
-    upsideTailProb: Number(upsideTailProb.toFixed(1)),
-    downsideTailProb: Number(downsideTailProb.toFixed(1)),
+    upsideTailProb: Number(Math.max(0.1, Math.min(99.9, upsideTailProb)).toFixed(1)),
+    downsideTailProb: Number(Math.max(0.1, Math.min(99.9, downsideTailProb)).toFixed(1)),
     interquartileRange: [Number(p25.toFixed(2)), Number(p75.toFixed(2))],
     confidence68: [Number(p16.toFixed(2)), Number(p84.toFixed(2))],
     confidence90: [Number(p05.toFixed(2)), Number(p95.toFixed(2))],
-    confidence95: [Number(p05.toFixed(2)), Number(p95.toFixed(2))],
+    confidence95: [Number(p025.toFixed(2)), Number(p975.toFixed(2))],
   };
 }
 

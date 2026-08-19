@@ -153,11 +153,9 @@ export const RiskMomentsCard: React.FC<RiskMomentsCardProps> = ({ moments, unitS
               </span>
             </div>
           </div>
-          <div className="text-[11px] text-gray-500 font-medium pt-2 border-t border-gray-200 mt-2">
-            P(Outcome &gt; {safeVar95}{unitSuffix}) = 5.0%
-          </div>
         </div>
       </div>
     </div>
   );
 };
+

@@ -1,3 +1,6 @@
+export type MarketCategory = 'inflation' | 'gdp' | 'labor' | 'fed' | 'housing' | 'custom';
+export type PricingMethodology = 'midpoint' | 'last_price';
+
 export interface StrikeContract {
   ticker: string;
   title: string;
@@ -7,11 +10,14 @@ export interface StrikeContract {
   yesBid: number;
   yesAsk: number;
   lastPrice: number;
+  midpointPrice?: number;
   noBid: number;
   noAsk: number;
   volume: number;
   openInterest: number;
   priceChange24h?: number;
+  isIlliquid?: boolean;
+  isEstimated?: boolean;
 }
 
 export interface DistributionBin {
@@ -42,21 +48,31 @@ export interface StatisticalMoments {
   kurtosis: number;
   entropy: number;
   var95: number;
-  cvar95?: number;
+  cvar95: number;
   upsideTailProb: number;
   downsideTailProb: number;
   interquartileRange: [number, number];
   confidence68: [number, number];
+  confidence90: [number, number];
   confidence95: [number, number];
 }
 
-export type MarketCategory = 'inflation' | 'gdp' | 'labor' | 'fed' | 'housing' | 'custom';
+export interface ArbitrageOpportunity {
+  lowerStrike: number;
+  upperStrike: number;
+  lowerPrice: number;
+  upperPrice: number;
+  spreadViolation: number;
+  description: string;
+}
 
 export interface ConsensusEstimate {
   source: string;
   value: number;
   date?: string;
   differenceFromKalshiMode?: number;
+  isStaticReference?: boolean;
+  sourceType?: 'live_nowcast' | 'periodic_survey' | 'model';
 }
 
 export interface HistoricalSnapshot {
@@ -65,6 +81,7 @@ export interface HistoricalSnapshot {
   median?: number;
   stdDev?: number;
   confidence68?: [number, number];
+  confidence90?: [number, number];
   consensus?: number;
 }
 
@@ -90,6 +107,9 @@ export interface MacroMarket {
   consensus?: ConsensusEstimate[];
   historicalForecastMean?: { timestamp: string; mean: number }[];
   historicalSnapshots?: HistoricalSnapshot[];
+  pricingMethodology?: PricingMethodology;
+  arbitrageOpportunities?: ArbitrageOpportunity[];
+  hasIlliquidStrikes?: boolean;
   description: string;
   summary: string;
   lastUpdated: string;
@@ -99,87 +119,249 @@ export interface MacroMarket {
 
 const KALSHI_API_BASE = 'https://api.elections.kalshi.com/trade-api/v2';
 
+/**
+ * Resolves the effective price in cents for a contract based on top of book.
+ */
+export function resolveContractPrice(
+  contract: StrikeContract,
+  methodology: PricingMethodology = 'midpoint'
+): { price: number; isEstimated: boolean } {
+  const { yesBid, yesAsk, lastPrice } = contract;
+
+  if (methodology === 'midpoint') {
+    if (yesBid > 0 && yesAsk < 100 && yesAsk >= yesBid) {
+      return { price: (yesBid + yesAsk) / 2, isEstimated: false };
+    }
+    if (yesBid > 0 && yesAsk >= 100) {
+      return { price: yesBid, isEstimated: false };
+    }
+    if (yesBid <= 0 && yesAsk < 100) {
+      return { price: yesAsk, isEstimated: false };
+    }
+    if (lastPrice > 0 && lastPrice < 100) {
+      return { price: lastPrice, isEstimated: false };
+    }
+  } else {
+    if (lastPrice > 0 && lastPrice < 100) {
+      return { price: lastPrice, isEstimated: false };
+    }
+    if (yesBid > 0 && yesAsk < 100 && yesAsk >= yesBid) {
+      return { price: (yesBid + yesAsk) / 2, isEstimated: false };
+    }
+  }
+
+  return { price: -1, isEstimated: true };
+}
+
+/**
+ * Enforces non-increasing cumulative probabilities via PAVA and flags arbitrage inversions.
+ */
+export function enforceMonotonicCumulative(
+  contracts: StrikeContract[],
+  methodology: PricingMethodology = 'midpoint'
+): {
+  sortedContracts: StrikeContract[];
+  rawCumulative: number[];
+  monotoneCumulative: number[];
+  arbitrageOpportunities: ArbitrageOpportunity[];
+  hasIlliquidStrikes: boolean;
+} {
+  const sorted = [...contracts].sort((a, b) => (a.floorStrike ?? 0) - (b.floorStrike ?? 0));
+  if (sorted.length === 0) {
+    return { sortedContracts: [], rawCumulative: [], monotoneCumulative: [], arbitrageOpportunities: [], hasIlliquidStrikes: false };
+  }
+
+  let hasIlliquid = false;
+  const rawCumulative: number[] = [];
+
+  for (let i = 0; i < sorted.length; i++) {
+    const c = sorted[i];
+    const { price, isEstimated } = resolveContractPrice(c, methodology);
+    if (isEstimated || price < 0) {
+      hasIlliquid = true;
+      c.isIlliquid = true;
+      c.isEstimated = true;
+    } else {
+      c.midpointPrice = c.yesBid > 0 && c.yesAsk < 100 ? (c.yesBid + c.yesAsk) / 2 : c.lastPrice;
+    }
+    rawCumulative.push(price);
+  }
+
+  // Monotonically bound unquoted strikes between valid quotes
+  for (let i = 0; i < rawCumulative.length; i++) {
+    if (rawCumulative[i] < 0) {
+      let leftVal = 100;
+      for (let j = i - 1; j >= 0; j--) {
+        if (rawCumulative[j] >= 0) {
+          leftVal = rawCumulative[j];
+          break;
+        }
+      }
+      let rightVal = 0;
+      for (let j = i + 1; j < rawCumulative.length; j++) {
+        if (rawCumulative[j] >= 0) {
+          rightVal = rawCumulative[j];
+          break;
+        }
+      }
+      rawCumulative[i] = Number(((leftVal + rightVal) / 2).toFixed(1));
+    }
+  }
+
+  // Detect calendar & vertical crossed-strike inversions
+  const arbitrageOpportunities: ArbitrageOpportunity[] = [];
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const k1 = sorted[i].floorStrike ?? 0;
+    const k2 = sorted[i + 1].floorStrike ?? 0;
+    const p1 = rawCumulative[i];
+    const p2 = rawCumulative[i + 1];
+
+    if (p1 < p2) {
+      const spreadViolation = Number((p1 - p2).toFixed(1));
+      arbitrageOpportunities.push({
+        lowerStrike: k1,
+        upperStrike: k2,
+        lowerPrice: p1,
+        upperPrice: p2,
+        spreadViolation,
+        description: `Strike ${k1} priced at ${p1}¢ is below Strike ${k2} at ${p2}¢ (${Math.abs(spreadViolation)}¢ inversion).`,
+      });
+    }
+  }
+
+  // Apply PAVA isotonic non-increasing regression
+  const n = rawCumulative.length;
+  const blocks: { weight: number; value: number; indices: number[] }[] = [];
+
+  for (let i = 0; i < n; i++) {
+    blocks.push({ weight: 1, value: rawCumulative[i], indices: [i] });
+
+    while (blocks.length > 1 && blocks[blocks.length - 1].value > blocks[blocks.length - 2].value) {
+      const b2 = blocks.pop()!;
+      const b1 = blocks.pop()!;
+      const totalWeight = b1.weight + b2.weight;
+      const avgValue = (b1.value * b1.weight + b2.value * b2.weight) / totalWeight;
+      blocks.push({
+        weight: totalWeight,
+        value: avgValue,
+        indices: [...b1.indices, ...b2.indices],
+      });
+    }
+  }
+
+  const monotoneCumulative = new Array(n).fill(0);
+  for (const block of blocks) {
+    for (const idx of block.indices) {
+      monotoneCumulative[idx] = Number(Math.max(0, Math.min(100, block.value)).toFixed(2));
+    }
+  }
+
+  return {
+    sortedContracts: sorted,
+    rawCumulative,
+    monotoneCumulative,
+    arbitrageOpportunities,
+    hasIlliquidStrikes: hasIlliquid,
+  };
+}
+
+/**
+ * Derives discrete probability mass function (PMF) bins from cumulative Kalshi strikes.
+ */
 export function deriveBinsFromCumulativeStrikes(
   contracts: StrikeContract[],
-  unitSuffix: string = '%'
-): DistributionBin[] {
-  const sorted = [...contracts].sort((a, b) => (a.floorStrike ?? 0) - (b.floorStrike ?? 0));
-  if (sorted.length === 0) return [];
+  unitSuffix: string = '%',
+  methodology: PricingMethodology = 'midpoint'
+): {
+  bins: DistributionBin[];
+  arbitrageOpportunities: ArbitrageOpportunity[];
+  hasIlliquidStrikes: boolean;
+} {
+  const { sortedContracts, monotoneCumulative, arbitrageOpportunities, hasIlliquidStrikes } =
+    enforceMonotonicCumulative(contracts, methodology);
+
+  if (sortedContracts.length === 0) {
+    return { bins: [], arbitrageOpportunities: [], hasIlliquidStrikes: false };
+  }
 
   const bins: DistributionBin[] = [];
-  const first = sorted[0];
-  const step = sorted.length > 1 && sorted[1].floorStrike && sorted[0].floorStrike
-    ? (sorted[1].floorStrike - sorted[0].floorStrike)
-    : 0.1;
+  const first = sortedContracts[0];
+  const step =
+    sortedContracts.length > 1 && sortedContracts[1].floorStrike !== undefined && sortedContracts[0].floorStrike !== undefined
+      ? sortedContracts[1].floorStrike - sortedContracts[0].floorStrike
+      : 0.1;
 
   const lowestStrike = first.floorStrike ?? 0;
-  const leftTailProb = Math.max(0, 100 - first.lastPrice);
+  const pAboveFirst = monotoneCumulative[0];
+  const leftTailProb = Math.max(0, 100 - pAboveFirst);
+
   bins.push({
     id: `bin-left-tail`,
     label: `< ${lowestStrike.toFixed(1)}${unitSuffix}`,
     rangeDisplay: `≤ ${lowestStrike.toFixed(1)}${unitSuffix}`,
-    lower: lowestStrike - step * 1.5,
-    upper: lowestStrike,
-    midpoint: lowestStrike - step * 0.5,
-    probability: Number(leftTailProb.toFixed(1)),
-    cumulativeProb: Number(leftTailProb.toFixed(1)),
+    lower: Number((lowestStrike - step * 1.5).toFixed(2)),
+    upper: Number(lowestStrike.toFixed(2)),
+    midpoint: Number((lowestStrike - step * 0.5).toFixed(2)),
+    probability: Number(leftTailProb.toFixed(2)),
+    cumulativeProb: Number(leftTailProb.toFixed(2)),
     isMode: false,
     isTail: true,
     tailDirection: 'left',
     delta24h: first.priceChange24h ? -first.priceChange24h : 0,
   });
 
-  for (let i = 0; i < sorted.length - 1; i++) {
-    const current = sorted[i];
-    const next = sorted[i + 1];
+  for (let i = 0; i < sortedContracts.length - 1; i++) {
+    const current = sortedContracts[i];
+    const next = sortedContracts[i + 1];
     const lower = current.floorStrike ?? 0;
     const upper = next.floorStrike ?? lower + step;
-    const prob = Math.max(0, current.lastPrice - next.lastPrice);
+    const prob = Math.max(0, monotoneCumulative[i] - monotoneCumulative[i + 1]);
 
     bins.push({
       id: `bin-${i}`,
       label: `${lower.toFixed(1)}${unitSuffix} – ${upper.toFixed(1)}${unitSuffix}`,
       rangeDisplay: `${lower.toFixed(1)}${unitSuffix} to ${upper.toFixed(1)}${unitSuffix}`,
-      lower,
-      upper,
-      midpoint: (lower + upper) / 2,
-      probability: Number(prob.toFixed(1)),
+      lower: Number(lower.toFixed(2)),
+      upper: Number(upper.toFixed(2)),
+      midpoint: Number(((lower + upper) / 2).toFixed(2)),
+      probability: Number(prob.toFixed(2)),
       cumulativeProb: 0,
       isMode: false,
       isTail: false,
       delta24h: (current.priceChange24h || 0) - (next.priceChange24h || 0),
       yesContractTicker: current.ticker,
-      marketPrice: current.lastPrice,
+      marketPrice: monotoneCumulative[i],
     });
   }
 
-  const last = sorted[sorted.length - 1];
+  const last = sortedContracts[sortedContracts.length - 1];
   const highestStrike = last.floorStrike ?? 0;
-  const rightTailProb = Math.max(0, last.lastPrice);
+  const rightTailProb = Math.max(0, monotoneCumulative[monotoneCumulative.length - 1]);
+
   bins.push({
     id: `bin-right-tail`,
     label: `> ${highestStrike.toFixed(1)}${unitSuffix}`,
     rangeDisplay: `> ${highestStrike.toFixed(1)}${unitSuffix}`,
-    lower: highestStrike,
-    upper: highestStrike + step * 1.5,
-    midpoint: highestStrike + step * 0.5,
-    probability: Number(rightTailProb.toFixed(1)),
+    lower: Number(highestStrike.toFixed(2)),
+    upper: Number((highestStrike + step * 1.5).toFixed(2)),
+    midpoint: Number((highestStrike + step * 0.5).toFixed(2)),
+    probability: Number(rightTailProb.toFixed(2)),
     cumulativeProb: 100,
     isMode: false,
     isTail: true,
     tailDirection: 'right',
     delta24h: last.priceChange24h || 0,
     yesContractTicker: last.ticker,
-    marketPrice: last.lastPrice,
+    marketPrice: rightTailProb,
   });
 
   const rawSum = bins.reduce((acc, b) => acc + b.probability, 0);
   if (rawSum > 0) {
     let runningCumulative = 0;
     bins.forEach((bin) => {
-      bin.probability = Number(((bin.probability / rawSum) * 100).toFixed(1));
+      bin.probability = Number(((bin.probability / rawSum) * 100).toFixed(2));
       runningCumulative += bin.probability;
-      bin.cumulativeProb = Number(Math.min(100, runningCumulative).toFixed(1));
+      bin.cumulativeProb = Number(Math.min(100, runningCumulative).toFixed(2));
     });
   }
 
@@ -196,9 +378,17 @@ export function deriveBinsFromCumulativeStrikes(
     bins[modeIndex].isMode = true;
   }
 
-  return bins;
+  return {
+    bins,
+    arbitrageOpportunities,
+    hasIlliquidStrikes,
+  };
 }
 
+/**
+ * Calculates statistical moments, quantile bounds, true CVaR Expected Shortfall,
+ * Shannon Entropy, and tail integrals.
+ */
 export function calculateStatisticalMoments(
   bins: DistributionBin[],
   unitSuffix: string = '%'
@@ -212,7 +402,7 @@ export function calculateStatisticalMoments(
       stdDev: 0,
       variance: 0,
       skewness: 0,
-      kurtosis: 3,
+      kurtosis: 0,
       entropy: 0,
       var95: 0,
       cvar95: 0,
@@ -220,34 +410,35 @@ export function calculateStatisticalMoments(
       downsideTailProb: 0,
       interquartileRange: [0, 0],
       confidence68: [0, 0],
+      confidence90: [0, 0],
       confidence95: [0, 0],
     };
   }
 
-  let mean = 0;
-  bins.forEach((bin) => {
-    mean += bin.midpoint * (bin.probability / 100);
-  });
+  const totalProb = bins.reduce((sum, b) => sum + b.probability, 0);
+  const weights = bins.map((b) => b.probability / (totalProb || 1));
 
-  let variance = 0;
-  let m3 = 0;
-  let m4 = 0;
+  const mean = bins.reduce((sum, b, i) => sum + b.midpoint * weights[i], 0);
+  const variance = bins.reduce((sum, b, i) => sum + Math.pow(b.midpoint - mean, 2) * weights[i], 0);
+  const stdDev = Math.sqrt(variance);
+
+  const m3 = bins.reduce((sum, b, i) => sum + Math.pow(b.midpoint - mean, 3) * weights[i], 0);
+  const skewness = stdDev > 0 ? m3 / Math.pow(stdDev, 3) : 0;
+
+  const m4 = bins.reduce((sum, b, i) => sum + Math.pow(b.midpoint - mean, 4) * weights[i], 0);
+  const kurtosis = stdDev > 0 ? m4 / Math.pow(stdDev, 4) - 3 : 0;
+
   let entropy = 0;
-
-  bins.forEach((bin) => {
-    const p = bin.probability / 100;
+  bins.forEach((b) => {
+    const p = b.probability / 100;
     if (p > 0) {
-      const diff = bin.midpoint - mean;
-      variance += Math.pow(diff, 2) * p;
-      m3 += Math.pow(diff, 3) * p;
-      m4 += Math.pow(diff, 4) * p;
       entropy -= p * Math.log2(p);
     }
   });
 
-  const stdDev = Math.sqrt(variance);
-  const skewness = stdDev > 0 ? m3 / Math.pow(stdDev, 3) : 0;
-  const kurtosis = stdDev > 0 ? m4 / Math.pow(stdDev, 4) : 3;
+  const modeBin = bins.find((b) => b.isMode) || bins[0];
+  const mode = modeBin.midpoint;
+  const modeRange = modeBin.label;
 
   const interpolatePercentile = (targetPct: number): number => {
     let runningProb = 0;
@@ -264,22 +455,65 @@ export function calculateStatisticalMoments(
     return bins[bins.length - 1].midpoint;
   };
 
+  const p025 = interpolatePercentile(2.5);
+  const p05 = interpolatePercentile(5);
+  const p16 = interpolatePercentile(16);
   const median = interpolatePercentile(50);
   const p25 = interpolatePercentile(25);
   const p75 = interpolatePercentile(75);
-  const p16 = interpolatePercentile(16);
   const p84 = interpolatePercentile(84);
   const p95 = interpolatePercentile(95);
-
-  const modeBin = bins.find((b) => b.isMode) || bins[0];
-  const mode = modeBin.midpoint;
-  const modeRange = modeBin.rangeDisplay;
+  const p975 = interpolatePercentile(97.5);
 
   const var95 = p95;
-  const cvar95 = Number((var95 + 0.5 * stdDev).toFixed(2));
 
-  const upsideTailProb = bins[bins.length - 1]?.probability || 0;
-  const downsideTailProb = bins[0]?.probability || 0;
+  // True Conditional Value at Risk: E[X | X >= VaR95]
+  let cvarSum = 0;
+  let cvarWeight = 0;
+
+  bins.forEach((b) => {
+    if (b.upper > var95) {
+      if (b.lower >= var95) {
+        const w = b.probability / 100;
+        cvarSum += b.midpoint * w;
+        cvarWeight += w;
+      } else {
+        const span = b.upper - b.lower;
+        const fraction = span > 0 ? (b.upper - var95) / span : 1;
+        const subMidpoint = (var95 + b.upper) / 2;
+        const w = (b.probability / 100) * fraction;
+        cvarSum += subMidpoint * w;
+        cvarWeight += w;
+      }
+    }
+  });
+
+  const cvar95 = cvarWeight > 0 ? cvarSum / cvarWeight : var95;
+
+  // Rigorous Tail Probabilities strictly beyond +/- 1.5 sigma
+  const highThreshold = mean + 1.5 * stdDev;
+  const lowThreshold = mean - 1.5 * stdDev;
+
+  let upsideTailProb = 0;
+  let downsideTailProb = 0;
+
+  bins.forEach((b) => {
+    if (b.lower >= highThreshold) {
+      upsideTailProb += b.probability;
+    } else if (b.upper > highThreshold) {
+      const span = b.upper - b.lower;
+      const frac = span > 0 ? (b.upper - highThreshold) / span : 0;
+      upsideTailProb += b.probability * frac;
+    }
+
+    if (b.upper <= lowThreshold) {
+      downsideTailProb += b.probability;
+    } else if (b.lower < lowThreshold) {
+      const span = b.upper - b.lower;
+      const frac = span > 0 ? (lowThreshold - b.lower) / span : 0;
+      downsideTailProb += b.probability * frac;
+    }
+  });
 
   return {
     mean: Number(mean.toFixed(2)),
@@ -292,18 +526,13 @@ export function calculateStatisticalMoments(
     kurtosis: Number(kurtosis.toFixed(2)),
     entropy: Number(entropy.toFixed(2)),
     var95: Number(var95.toFixed(2)),
-    cvar95,
-    upsideTailProb,
-    downsideTailProb,
+    cvar95: Number(cvar95.toFixed(2)),
+    upsideTailProb: Number(Math.max(0.1, Math.min(99.9, upsideTailProb)).toFixed(1)),
+    downsideTailProb: Number(Math.max(0.1, Math.min(99.9, downsideTailProb)).toFixed(1)),
     interquartileRange: [Number(p25.toFixed(2)), Number(p75.toFixed(2))],
-    confidence68: [
-      Number(p16.toFixed(2)),
-      Number(p84.toFixed(2)),
-    ],
-    confidence95: [
-      Number((mean - 1.96 * stdDev).toFixed(2)),
-      Number((mean + 1.96 * stdDev).toFixed(2)),
-    ],
+    confidence68: [Number(p16.toFixed(2)), Number(p84.toFixed(2))],
+    confidence90: [Number(p05.toFixed(2)), Number(p95.toFixed(2))],
+    confidence95: [Number(p025.toFixed(2)), Number(p975.toFixed(2))],
   };
 }
 
@@ -333,9 +562,9 @@ const CORE_EVENTS: {
     sourceAgency: 'Bureau of Labor Statistics',
     kalshiUrl: 'https://kalshi.com/markets/kxcpiyoy/inflation/kxcpiyoy-26aug',
     consensus: [
-      { source: 'Bloomberg Consensus', value: 3.30, date: 'Aug 14, 2026', differenceFromKalshiMode: 0.00 },
-      { source: 'Cleveland Fed Nowcast', value: 3.34, date: 'Aug 15, 2026', differenceFromKalshiMode: -0.04 },
-      { source: 'Wall Street Median', value: 3.25, date: 'Aug 12, 2026', differenceFromKalshiMode: 0.05 },
+      { source: 'Bloomberg Consensus', value: 3.30, date: 'Aug 14, 2026', differenceFromKalshiMode: 0.00, isStaticReference: true, sourceType: 'periodic_survey' },
+      { source: 'Cleveland Fed Nowcast', value: 3.34, date: 'Aug 15, 2026', differenceFromKalshiMode: -0.04, isStaticReference: false, sourceType: 'live_nowcast' },
+      { source: 'Wall Street Median', value: 3.25, date: 'Aug 12, 2026', differenceFromKalshiMode: 0.05, isStaticReference: true, sourceType: 'periodic_survey' },
     ],
     historicalSnapshots: [
       { timestamp: 'May 2026', mean: 3.65, median: 3.60, stdDev: 0.22, confidence68: [3.43, 3.87], consensus: 3.60 },
@@ -357,9 +586,9 @@ const CORE_EVENTS: {
     sourceAgency: 'Bureau of Economic Analysis',
     kalshiUrl: 'https://kalshi.com/markets/kxgdp/us-gdp-growth/kxgdp-26oct30',
     consensus: [
-      { source: 'Atlanta Fed GDPNow', value: 2.30, date: 'Aug 15, 2026', differenceFromKalshiMode: -0.05 },
-      { source: 'Blue Chip Consensus', value: 2.00, date: 'Aug 10, 2026', differenceFromKalshiMode: 0.25 },
-      { source: 'NY Fed Staff Nowcast', value: 2.15, date: 'Aug 12, 2026', differenceFromKalshiMode: 0.10 },
+      { source: 'Atlanta Fed GDPNow', value: 2.30, date: 'Aug 15, 2026', differenceFromKalshiMode: -0.05, isStaticReference: false, sourceType: 'live_nowcast' },
+      { source: 'Blue Chip Consensus', value: 2.00, date: 'Aug 10, 2026', differenceFromKalshiMode: 0.25, isStaticReference: true, sourceType: 'periodic_survey' },
+      { source: 'NY Fed Staff Nowcast', value: 2.15, date: 'Aug 12, 2026', differenceFromKalshiMode: 0.10, isStaticReference: false, sourceType: 'live_nowcast' },
     ],
     historicalSnapshots: [
       { timestamp: 'Jun 2026', mean: 1.85, median: 1.80, stdDev: 0.55, confidence68: [1.30, 2.40], consensus: 1.80 },
@@ -380,9 +609,9 @@ const CORE_EVENTS: {
     sourceAgency: 'Bureau of Labor Statistics',
     kalshiUrl: 'https://kalshi.com/markets/kxu3/unemployment/kxu3-26aug',
     consensus: [
-      { source: 'Bloomberg Consensus', value: 4.30, date: 'Aug 14, 2026', differenceFromKalshiMode: -0.05 },
-      { source: 'Dow Jones Survey', value: 4.25, date: 'Aug 12, 2026', differenceFromKalshiMode: 0.00 },
-      { source: 'Prior Month Actual', value: 4.30, date: 'Aug 01, 2026', differenceFromKalshiMode: -0.05 },
+      { source: 'Bloomberg Consensus', value: 4.30, date: 'Aug 14, 2026', differenceFromKalshiMode: -0.05, isStaticReference: true, sourceType: 'periodic_survey' },
+      { source: 'Dow Jones Survey', value: 4.25, date: 'Aug 12, 2026', differenceFromKalshiMode: 0.00, isStaticReference: true, sourceType: 'periodic_survey' },
+      { source: 'Prior Month Actual', value: 4.30, date: 'Aug 01, 2026', differenceFromKalshiMode: -0.05, isStaticReference: true, sourceType: 'periodic_survey' },
     ],
     historicalSnapshots: [
       { timestamp: 'May 2026', mean: 4.05, median: 4.00, stdDev: 0.16, confidence68: [3.89, 4.21], consensus: 4.00 },
@@ -403,9 +632,9 @@ const CORE_EVENTS: {
     sourceAgency: 'Federal Reserve Board of Governors',
     kalshiUrl: 'https://kalshi.com/markets/kxfedfundsyear/fed-funds-rate-at-year-end/kxfedfundsyear-28jan01',
     consensus: [
-      { source: 'FOMC Median SEP (Dot Plot)', value: 3.88, date: 'Jun 2026', differenceFromKalshiMode: 0.20 },
-      { source: 'CME FedWatch Implied', value: 4.10, date: 'Aug 15, 2026', differenceFromKalshiMode: -0.02 },
-      { source: 'Primary Dealer Survey', value: 4.00, date: 'Aug 10, 2026', differenceFromKalshiMode: 0.08 },
+      { source: 'FOMC Median SEP (Dot Plot)', value: 3.88, date: 'Jun 2026', differenceFromKalshiMode: 0.20, isStaticReference: true, sourceType: 'periodic_survey' },
+      { source: 'CME FedWatch Implied', value: 4.10, date: 'Aug 15, 2026', differenceFromKalshiMode: -0.02, isStaticReference: false, sourceType: 'live_nowcast' },
+      { source: 'Primary Dealer Survey', value: 4.00, date: 'Aug 10, 2026', differenceFromKalshiMode: 0.08, isStaticReference: true, sourceType: 'periodic_survey' },
     ],
     historicalSnapshots: [
       { timestamp: 'May 2026', mean: 4.55, median: 4.50, stdDev: 0.65, confidence68: [3.90, 5.20], consensus: 4.25 },
@@ -417,36 +646,80 @@ const CORE_EVENTS: {
   },
 ];
 
+const KALSHI_API_BASES = [
+  'https://trading-api.kalshi.com/trade-api/v2',
+  'https://api.kalshi.com/trade-api/v2',
+  'https://api.elections.kalshi.com/trade-api/v2',
+];
+
 let memoryCache: { timestamp: number; data: any } | null = null;
 const CACHE_TTL_MS = 30000; // 30s cache
 
-async function fetchKalshiEvent(eventTicker: string) {
-  const url = `${KALSHI_API_BASE}/events/${encodeURIComponent(eventTicker)}?with_nested_markets=true`;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+async function fetchKalshiEvent(eventTicker: string, seriesTicker?: string) {
+  let lastError: any = null;
 
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      },
-    });
+  for (const baseUrl of KALSHI_API_BASES) {
+    // 1. Direct event ticker lookup
+    const url = `${baseUrl}/events/${encodeURIComponent(eventTicker)}?with_nested_markets=true`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
 
-    clearTimeout(timeoutId);
+    try {
+      const res = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        },
+      });
 
-    if (!res.ok) {
-      throw new Error(`Kalshi API returned HTTP ${res.status} for ${eventTicker}`);
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        return data;
+      }
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      lastError = err;
     }
 
-    const data = await res.json();
-    return data;
-  } catch (err: any) {
-    clearTimeout(timeoutId);
-    throw err;
+    // 2. Series ticker search fallback
+    try {
+      const series = seriesTicker || eventTicker.split('-')[0];
+      const seriesUrl = `${baseUrl}/events?series_ticker=${encodeURIComponent(series)}&status=open`;
+      const sRes = await fetch(seriesUrl, {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        },
+      });
+
+      if (sRes.ok) {
+        const sData = await sRes.json();
+        const events = sData.events || [];
+        if (events.length > 0) {
+          const nestedUrl = `${baseUrl}/events/${encodeURIComponent(events[0].event_ticker)}?with_nested_markets=true`;
+          const nRes = await fetch(nestedUrl, {
+            headers: {
+              Accept: 'application/json',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            },
+          });
+          if (nRes.ok) {
+            return await nRes.json();
+          }
+        }
+      }
+    } catch (err: any) {
+      lastError = err;
+    }
   }
+
+  throw lastError || new Error(`Failed to fetch event '${eventTicker}' across all Kalshi API gateways`);
 }
+
+
 
 function parseKalshiEventToMarket(
   data: any,
@@ -473,33 +746,49 @@ function parseKalshiEventToMarket(
   const contracts: StrikeContract[] = rawMarkets
     .filter((m: any) => m.floor_strike !== undefined || m.strike_level !== undefined)
     .map((m: any) => {
+      const yesBidCents = m.yes_bid_dollars
+        ? Math.round(parseFloat(m.yes_bid_dollars) * 100)
+        : (m.yes_bid || 0);
+
+      const yesAskCents = m.yes_ask_dollars
+        ? Math.round(parseFloat(m.yes_ask_dollars) * 100)
+        : (m.yes_ask || 100);
+
       const lastPriceCents = m.last_price_dollars
         ? Math.round(parseFloat(m.last_price_dollars) * 100)
-        : m.yes_bid_dollars
-        ? Math.round(parseFloat(m.yes_bid_dollars) * 100)
-        : 50;
+        : (m.last_price || 0);
 
-      const yesBidCents = m.yes_bid_dollars ? Math.round(parseFloat(m.yes_bid_dollars) * 100) : 0;
-      const yesAskCents = m.yes_ask_dollars ? Math.round(parseFloat(m.yes_ask_dollars) * 100) : 100;
-      const noBidCents = m.no_bid_dollars ? Math.round(parseFloat(m.no_bid_dollars) * 100) : 0;
-      const noAskCents = m.no_ask_dollars ? Math.round(parseFloat(m.no_ask_dollars) * 100) : 100;
+      const noBidCents = m.no_bid_dollars
+        ? Math.round(parseFloat(m.no_bid_dollars) * 100)
+        : (m.no_bid || 0);
+
+      const noAskCents = m.no_ask_dollars
+        ? Math.round(parseFloat(m.no_ask_dollars) * 100)
+        : (m.no_ask || 100);
+
+      const midpointCents =
+        yesBidCents > 0 && yesAskCents < 100 && yesAskCents >= yesBidCents
+          ? (yesBidCents + yesAskCents) / 2
+          : lastPriceCents > 0
+          ? lastPriceCents
+          : 0;
 
       const volume = m.volume_fp ? Math.round(parseFloat(m.volume_fp)) : (m.volume || 0);
       const openInterest = m.open_interest_fp ? Math.round(parseFloat(m.open_interest_fp)) : (m.open_interest || 0);
       const floorStrike = m.floor_strike !== undefined ? parseFloat(m.floor_strike) : (m.strike_level !== undefined ? parseFloat(m.strike_level) : undefined);
       const unitSuffix = meta?.unitSuffix || '%';
       const strikeText = floorStrike !== undefined ? `Above ${floorStrike}${unitSuffix}` : (m.yes_sub_title || m.ticker);
-      const title = strikeText;
 
       return {
         ticker: m.ticker,
-        title,
+        title: strikeText,
         strikeType: m.strike_type === 'greater' ? 'greater' : 'less',
         floorStrike,
         capStrike: m.cap_strike !== undefined ? parseFloat(m.cap_strike) : undefined,
         yesBid: yesBidCents,
         yesAsk: yesAskCents,
-        lastPrice: Math.max(1, Math.min(99, lastPriceCents)),
+        lastPrice: lastPriceCents,
+        midpointPrice: midpointCents,
         noBid: noBidCents,
         noAsk: noAskCents,
         volume,
@@ -514,7 +803,8 @@ function parseKalshiEventToMarket(
   }
 
   const unitSuffix = meta?.unitSuffix || '%';
-  const bins = deriveBinsFromCumulativeStrikes(contracts, unitSuffix);
+  const { bins, arbitrageOpportunities, hasIlliquidStrikes } =
+    deriveBinsFromCumulativeStrikes(contracts, unitSuffix, 'midpoint');
   const moments = calculateStatisticalMoments(bins, unitSuffix);
 
   const totalVol = contracts.reduce((acc, c) => acc + c.volume, 0);
@@ -523,11 +813,13 @@ function parseKalshiEventToMarket(
   const marketId = meta?.id || event.event_ticker.toLowerCase();
   const seriesTicker = event.series_ticker || event.event_ticker.split('-')[0];
 
+  // If historical tracking is configured for a core market, append current live point.
+  // For custom markets without verified historical records, do NOT fabricate prior points.
   const historicalSnapshots: HistoricalSnapshot[] = meta?.historicalSnapshots
     ? [
         ...meta.historicalSnapshots,
         {
-          timestamp: 'Current',
+          timestamp: 'Live Order Book',
           mean: moments.mean,
           median: moments.median,
           stdDev: moments.stdDev,
@@ -536,8 +828,13 @@ function parseKalshiEventToMarket(
         },
       ]
     : [
-        { timestamp: 'Prior', mean: Number((moments.mean - 0.05).toFixed(2)) },
-        { timestamp: 'Current', mean: moments.mean },
+        {
+          timestamp: 'Live Order Book',
+          mean: moments.mean,
+          median: moments.median,
+          stdDev: moments.stdDev,
+          confidence68: moments.confidence68,
+        },
       ];
 
   const historicalForecastMean = historicalSnapshots.map((h) => ({
@@ -578,6 +875,9 @@ function parseKalshiEventToMarket(
     consensus,
     historicalForecastMean,
     historicalSnapshots,
+    pricingMethodology: 'midpoint',
+    arbitrageOpportunities,
+    hasIlliquidStrikes,
     description: `Live Kalshi market probability distribution derived from active binary strike contracts for ${event.event_ticker}. ${summaryText}`,
     summary: summaryText,
     lastUpdated: new Date().toISOString(),
@@ -652,8 +952,9 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    const raw = await fetchKalshiEvent(targetTicker);
+    const raw = await fetchKalshiEvent(targetTicker, series_ticker?.toString());
     const market = parseKalshiEventToMarket(raw);
+
 
     return res.status(200).json({
       success: true,

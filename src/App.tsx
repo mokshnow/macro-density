@@ -5,7 +5,9 @@ import { Header } from './components/Header';
 import { MarketSelector } from './components/MarketSelector';
 import { MacroHeroCard } from './components/MacroHeroCard';
 import { DensityChart } from './components/DensityChart';
+import { FedRatePathFanChart } from './components/FedRatePathFanChart';
 import { RiskMomentsCard } from './components/RiskMomentsCard';
+import { StressTestCard } from './components/StressTestCard';
 import { HedgingSimulator } from './components/HedgingSimulator';
 import { CustomMarketModal } from './components/CustomMarketModal';
 import { Footer } from './components/Footer';
@@ -63,6 +65,16 @@ export function App() {
           </ErrorBoundary>
         )}
 
+        {/* Fed Funds Rate Path & Uncertainty Fan Chart (when policy rate path exists) */}
+        {currentMarket?.ratePath && currentMarket.ratePath.length > 0 && (
+          <ErrorBoundary fallbackTitle="Rate Path Fan Chart Error">
+            <FedRatePathFanChart
+              ratePath={currentMarket.ratePath}
+              unitSuffix={currentMarket.unitSuffix}
+            />
+          </ErrorBoundary>
+        )}
+
         {/* Interactive Probability Distribution Visualizer */}
         {currentMarket && (
           <ErrorBoundary fallbackTitle="Density Visualizer Error">
@@ -77,6 +89,13 @@ export function App() {
               moments={currentMarket.moments}
               unitSuffix={currentMarket.unitSuffix}
             />
+          </ErrorBoundary>
+        )}
+
+        {/* Macro Stress-Test & What-If Scenario Shifter */}
+        {currentMarket && (
+          <ErrorBoundary fallbackTitle="Stress Test Error">
+            <StressTestCard market={currentMarket} />
           </ErrorBoundary>
         )}
 
@@ -104,3 +123,5 @@ export function App() {
 }
 
 export default App;
+
+

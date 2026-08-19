@@ -1,22 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { MacroMarket } from '../types/market';
-import { 
-  Zap, 
-  RotateCcw, 
-  TrendingUp, 
-  TrendingDown, 
-  Activity, 
-  AlertTriangle, 
-  ArrowRight,
-  Flame,
-  Snowflake,
-  ShieldAlert,
-  Users,
-  Briefcase,
-  Layers,
-  CheckCircle2,
-  DollarSign
-} from 'lucide-react';
+import { RotateCcw, ArrowRight } from 'lucide-react';
 
 interface StressTestCardProps {
   market: MacroMarket;
@@ -26,11 +10,11 @@ interface ScenarioPreset {
   id: string;
   name: string;
   description: string;
-  icon: React.ReactNode;
   meanShift: number;
   volMultiplier: number;
   skewShift: number;
 }
+
 
 interface HoverCrosshairState {
   xVal: number;
@@ -55,36 +39,33 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
   const [hoverCursor, setHoverCursor] = useState<HoverCrosshairState | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
-  // Category-specific presets
+  // Category-specific presets tailored to the 3 most impactful macro drivers
   const presets: ScenarioPreset[] = useMemo(() => {
     if (market.category === 'inflation') {
       return [
         {
-          id: 'oil_shock',
-          name: 'Oil & Energy Surge',
-          description: '+25bps Mean, +40% Volatility, Upside Skew',
-          icon: <Flame className="w-4 h-4 text-amber-500" />,
-          meanShift: 0.25,
-          volMultiplier: 1.4,
-          skewShift: 0.35,
+          id: 'oil_energy_surge',
+          name: 'Energy & Crude Oil Surge',
+          description: '+35bps Mean, +45% Vol, Upside Tail Skew',
+          meanShift: 0.35,
+          volMultiplier: 1.45,
+          skewShift: 0.40,
         },
         {
-          id: 'disinflation',
-          name: 'Supply Chain Cooling',
-          description: '-20bps Mean, -15% Volatility',
-          icon: <Snowflake className="w-4 h-4 text-blue-500" />,
-          meanShift: -0.20,
-          volMultiplier: 0.85,
-          skewShift: -0.25,
+          id: 'tariffs_supply_chain',
+          name: 'Global Tariff & Freight Shock',
+          description: '+20bps Mean, +30% Vol, Higher Kurtosis',
+          meanShift: 0.20,
+          volMultiplier: 1.30,
+          skewShift: 0.25,
         },
         {
-          id: 'stagflation',
-          name: 'Stagflation Shock',
-          description: '+45bps Mean, +80% Volatility, Severe Fat Tails',
-          icon: <ShieldAlert className="w-4 h-4 text-rose-500" />,
-          meanShift: 0.45,
-          volMultiplier: 1.8,
-          skewShift: 0.60,
+          id: 'shelter_cooling',
+          name: 'Rental & Shelter Disinflation',
+          description: '-25bps Mean, -20% Vol, Downside Cooling',
+          meanShift: -0.25,
+          volMultiplier: 0.80,
+          skewShift: -0.35,
         },
       ];
     }
@@ -92,31 +73,28 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
     if (market.category === 'gdp') {
       return [
         {
-          id: 'recession',
-          name: 'Hard Landing Shock',
-          description: '-0.80% Growth, +70% Volatility, Downside Skew',
-          icon: <TrendingDown className="w-4 h-4 text-rose-500" />,
-          meanShift: -0.80,
-          volMultiplier: 1.7,
-          skewShift: -0.50,
+          id: 'credit_contraction',
+          name: 'Banking Credit Contraction',
+          description: '-0.60% Growth, +50% Vol, Downside Skew',
+          meanShift: -0.60,
+          volMultiplier: 1.50,
+          skewShift: -0.40,
         },
         {
-          id: 'productivity',
-          name: 'Productivity & AI Boom',
-          description: '+0.50% Growth, Moderate Volatility',
-          icon: <TrendingUp className="w-4 h-4 text-emerald-600" />,
+          id: 'consumer_recession',
+          name: 'Consumer Demand Contraction',
+          description: '-0.90% Growth, +80% Dispersion, Heavy Left Tail',
+          meanShift: -0.90,
+          volMultiplier: 1.80,
+          skewShift: -0.55,
+        },
+        {
+          id: 'productivity_boom',
+          name: 'Productivity & Capex Surge',
+          description: '+0.50% Growth, +15% Vol, Upside Expansion',
           meanShift: 0.50,
-          volMultiplier: 1.1,
-          skewShift: 0.20,
-        },
-        {
-          id: 'credit_tightening',
-          name: 'Credit Crunch Shock',
-          description: '-0.40% Growth, +40% Dispersion',
-          icon: <AlertTriangle className="w-4 h-4 text-amber-500" />,
-          meanShift: -0.40,
-          volMultiplier: 1.4,
-          skewShift: -0.30,
+          volMultiplier: 1.15,
+          skewShift: 0.25,
         },
       ];
     }
@@ -124,48 +102,91 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
     if (market.category === 'labor') {
       return [
         {
-          id: 'layoffs',
-          name: 'Corporate Layoff Surge',
-          description: '+0.40% Unemployment, +50% Volatility',
-          icon: <Users className="w-4 h-4 text-rose-500" />,
-          meanShift: 0.40,
-          volMultiplier: 1.5,
-          skewShift: 0.40,
+          id: 'layoffs_automation',
+          name: 'Corporate Layoffs & Automation',
+          description: '+0.45% Unemployment, +60% Vol, Right-Tail Spike',
+          meanShift: 0.45,
+          volMultiplier: 1.60,
+          skewShift: 0.45,
         },
         {
-          id: 'labor_tightness',
-          name: 'Worker Shortage Tightness',
-          description: '-0.20% Unemployment, Volatility Contraction',
-          icon: <Briefcase className="w-4 h-4 text-blue-500" />,
+          id: 'hiring_freeze',
+          name: 'Broad SMB Hiring Freeze',
+          description: '+0.75% Unemployment, +90% Dispersion, Extreme Skew',
+          meanShift: 0.75,
+          volMultiplier: 1.90,
+          skewShift: 0.60,
+        },
+        {
+          id: 'labor_participation_influx',
+          name: 'Labor Participation Influx',
+          description: '-0.20% Unemployment, -15% Vol Contraction',
           meanShift: -0.20,
-          volMultiplier: 0.8,
+          volMultiplier: 0.85,
           skewShift: -0.20,
         },
       ];
     }
 
-    // Default macro presets (Rates / Other)
+    if (market.category === 'fed' || market.category === 'rates') {
+      return [
+        {
+          id: 'hawkish_pivot',
+          name: 'Hawkish Pivot / Inflation Resurgence',
+          description: '+0.50% Rate, +45% Vol, Aborted Easing',
+          meanShift: 0.50,
+          volMultiplier: 1.45,
+          skewShift: 0.40,
+        },
+        {
+          id: 'emergency_cuts',
+          name: 'Emergency Inter-Meeting Easing',
+          description: '-0.75% Rate, +80% Dispersion, Rapid 75bps Cut',
+          meanShift: -0.75,
+          volMultiplier: 1.80,
+          skewShift: -0.50,
+        },
+        {
+          id: 'r_star_revision',
+          name: 'Higher Neutral Rate (r*) Shift',
+          description: '+0.25% Rate, +20% Vol, Structural Floor',
+          meanShift: 0.25,
+          volMultiplier: 1.20,
+          skewShift: 0.20,
+        },
+      ];
+    }
+
+    // Default / Custom Markets
     return [
       {
-        id: 'hawkish_50',
-        name: 'Hawkish 50bps Hike',
-        description: '+0.50% Rate, +40% Volatility Expansion',
-        icon: <TrendingUp className="w-4 h-4 text-rose-500" />,
-        meanShift: 0.50,
-        volMultiplier: 1.4,
-        skewShift: 0.30,
+        id: 'adverse_tail',
+        name: 'Adverse Tail Event',
+        description: '+0.40 Mean, +70% Volatility, Extreme Skew',
+        meanShift: 0.40,
+        volMultiplier: 1.70,
+        skewShift: 0.50,
       },
       {
-        id: 'dovish_cut',
-        name: 'Emergency 50bps Cut',
-        description: '-0.50% Rate, +60% Volatility',
-        icon: <TrendingDown className="w-4 h-4 text-blue-500" />,
-        meanShift: -0.50,
-        volMultiplier: 1.6,
-        skewShift: -0.40,
+        id: 'downside_contraction',
+        name: 'Severe Downside Contraction',
+        description: '-0.40 Mean, +50% Volatility, Left-Tail Skew',
+        meanShift: -0.40,
+        volMultiplier: 1.50,
+        skewShift: -0.45,
+      },
+      {
+        id: 'vol_compression',
+        name: 'Volatility Compression',
+        description: '0bps Shift, -30% Volatility, Tight Distribution',
+        meanShift: 0.0,
+        volMultiplier: 0.70,
+        skewShift: 0.0,
       },
     ];
   }, [market.category]);
+
+
 
   const applyPreset = (preset: ScenarioPreset) => {
     if (selectedPresetId === preset.id) {
@@ -343,18 +364,13 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
     <div className="bg-white rounded-2xl border-2 border-black shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-6">
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b-2 border-gray-300 mb-5">
-        <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-lg bg-amber-50 text-amber-700 border-2 border-amber-300">
-            <Zap className="w-4 h-4 fill-amber-500 text-amber-600" />
-          </div>
-          <div>
-            <h3 className="text-base font-extrabold text-gray-950 tracking-tight flex items-center gap-2">
-              Macro Stress-Test &amp; "What-If" Scenario Shifter
-            </h3>
-            <p className="text-xs text-gray-600 font-medium">
-              Simulate macroeconomic shocks to dynamically reprice probability density, dispersion, and tail risk.
-            </p>
-          </div>
+        <div>
+          <h3 className="text-base font-extrabold text-gray-950 tracking-tight">
+            Stress Test
+          </h3>
+          <p className="text-xs text-gray-600 font-medium">
+            Simulate macroeconomic shocks to dynamically reprice probability density, dispersion, and tail risk.
+          </p>
         </div>
 
         {/* Reset Button */}
@@ -381,17 +397,14 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
               <button
                 key={preset.id}
                 onClick={() => applyPreset(preset)}
-                className={`p-3.5 text-left rounded-xl border-2 transition-all flex items-start gap-3 cursor-pointer ${
+                className={`p-3.5 text-left rounded-xl border-2 transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-amber-50 border-amber-500 shadow-sm ring-2 ring-amber-400/30'
                     : 'bg-gray-50/70 hover:bg-white border-gray-300 hover:border-gray-400 shadow-2xs'
                 }`}
               >
-                <div className="mt-0.5 shrink-0 p-1.5 rounded-lg bg-white border border-gray-200 shadow-2xs">
-                  {preset.icon}
-                </div>
                 <div>
-                  <div className="text-xs font-extrabold text-gray-950 flex items-center gap-1.5">
+                  <div className="text-xs font-extrabold text-gray-950 flex items-center justify-between gap-1.5">
                     <span>{preset.name}</span>
                     {isSelected && (
                       <span className="text-[10px] bg-amber-200 text-amber-950 font-black px-1.5 py-0.2 rounded font-mono">
@@ -399,7 +412,7 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] text-gray-600 font-semibold mt-0.5 leading-tight">
+                  <div className="text-[11px] text-gray-600 font-semibold mt-1 leading-tight">
                     {preset.description}
                   </div>
                 </div>
@@ -408,6 +421,7 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
           })}
         </div>
       </div>
+
 
       {/* Interactive Shock Sliders */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5 p-4 rounded-xl bg-gray-50/80 border-2 border-gray-300">
@@ -430,8 +444,8 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
 
           <input
             type="range"
-            min={-0.80}
-            max={0.80}
+            min={-1.00}
+            max={1.00}
             step={0.05}
             value={meanShift}
             onChange={(e) => {
@@ -443,20 +457,21 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
 
           <div className="flex items-center justify-between mt-2 pt-1 border-t border-gray-100">
             <button
-              onClick={() => { setSelectedPresetId(null); setMeanShift((prev) => Math.max(-0.80, Number((prev - 0.05).toFixed(2)))); }}
+              onClick={() => { setSelectedPresetId(null); setMeanShift((prev) => Math.max(-1.00, Number((prev - 0.05).toFixed(2)))); }}
               className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300"
             >
               -0.05
             </button>
             <span className="text-[10px] text-gray-500 font-mono font-semibold">Baseline: 0.00{unitSuffix}</span>
             <button
-              onClick={() => { setSelectedPresetId(null); setMeanShift((prev) => Math.min(0.80, Number((prev + 0.05).toFixed(2)))); }}
+              onClick={() => { setSelectedPresetId(null); setMeanShift((prev) => Math.min(1.00, Number((prev + 0.05).toFixed(2)))); }}
               className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300"
             >
               +0.05
             </button>
           </div>
         </div>
+
 
         {/* Slider 2: Volatility Multiplier */}
         <div className="p-3.5 bg-white rounded-xl border-2 border-gray-300 shadow-2xs">
@@ -556,10 +571,10 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
       {/* Dual Curve Visualization Overlay */}
       <div className="relative w-full bg-white rounded-xl border-2 border-gray-400 p-4 mb-5 overflow-hidden shadow-2xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 mb-3 gap-2">
-          <span className="text-xs font-extrabold text-gray-950 flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-[#00D26A]" />
-            <span>Probability Density Shift Overlay</span>
+          <span className="text-xs font-extrabold text-gray-950">
+            Probability Density Shift Overlay
           </span>
+
           <div className="flex items-center gap-4 text-xs font-mono font-bold">
             <div className="flex items-center gap-1.5">
               <span className="w-3.5 h-1 bg-[#00D26A] rounded-full inline-block"></span>
@@ -813,19 +828,15 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
       {/* Quant Portfolio Hedging Impact Breakdown */}
       {isStressed && (
         <div className="p-4 rounded-xl bg-amber-50/90 border-2 border-amber-400 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-amber-500 text-white shrink-0 mt-0.5 shadow-2xs">
-              <DollarSign className="w-4 h-4" />
+          <div>
+            <div className="text-xs font-bold text-amber-950 uppercase tracking-wider">
+              Stress Scenario Hedging Impact
             </div>
-            <div>
-              <div className="text-xs font-bold text-amber-950 uppercase tracking-wider">
-                Stress Scenario Hedging Impact
-              </div>
-              <div className="text-sm font-semibold text-gray-900 mt-0.5">
-                Required hedge size increases to <strong className="font-mono text-amber-950 font-black">{stressedContracts.toLocaleString()}</strong> contracts (Est. portfolio loss: ${stressedLossEstimate.toLocaleString()}).
-              </div>
+            <div className="text-sm font-semibold text-gray-900 mt-0.5">
+              Required hedge size increases to <strong className="font-mono text-amber-950 font-black">{stressedContracts.toLocaleString()}</strong> contracts (Est. portfolio loss: ${stressedLossEstimate.toLocaleString()}).
             </div>
           </div>
+
 
           <div className="flex items-center gap-5 border-t md:border-t-0 md:border-l-2 border-amber-300 pt-3 md:pt-0 md:pl-5 shrink-0">
             <div>

@@ -1,5 +1,170 @@
-import { MacroMarket, StrikeContract } from '../types/market';
+import { MacroMarket, StrikeContract, FedMeetingProjection } from '../types/market';
 import { deriveBinsFromCumulativeStrikes, calculateStatisticalMoments } from '../utils/distributionMath';
+
+export const FED_RATE_PATH_PROJECTIONS: FedMeetingProjection[] = [
+  {
+    meetingDate: 'Aug 19, 2026',
+    label: 'Current (EFFR)',
+    eventTicker: 'CURRENT-EFFR',
+    isCurrent: true,
+    expectedRate: 5.33,
+    medianRate: 5.33,
+    stdDev: 0.0,
+    confidence50: [5.33, 5.33],
+    confidence68: [5.33, 5.33],
+    confidence90: [5.33, 5.33],
+    cutProbability25bps: 0,
+    cutProbability50bps: 0,
+    pauseProbability: 100,
+    hikeProbability: 0,
+    cumulativeCutBps: 0,
+    fomcDots: [5.33, 5.33, 5.33, 5.33, 5.33],
+    fomcMedian: 5.33,
+    cmeImplied: 5.33,
+    priorMonthExpectedRate: 5.33,
+  },
+  {
+    meetingDate: 'Sep 16, 2026',
+    label: 'Sep 2026',
+    eventTicker: 'KXFED-26SEP',
+    expectedRate: 5.10,
+    medianRate: 5.12,
+    stdDev: 0.14,
+    confidence50: [5.00, 5.25],
+    confidence68: [4.94, 5.26],
+    confidence90: [4.75, 5.40],
+    cutProbability25bps: 76,
+    cutProbability50bps: 16,
+    pauseProbability: 8,
+    hikeProbability: 0,
+    cumulativeCutBps: -25,
+    fomcDots: [5.12, 5.12, 5.12, 5.12, 5.12, 5.12, 5.12, 5.12, 5.38, 5.38, 4.88, 4.88],
+    fomcMedian: 5.12,
+    cmeImplied: 5.08,
+    priorMonthExpectedRate: 5.22,
+  },
+  {
+    meetingDate: 'Nov 04, 2026',
+    label: 'Nov 2026',
+    eventTicker: 'KXFED-26NOV',
+    expectedRate: 4.84,
+    medianRate: 4.88,
+    stdDev: 0.22,
+    confidence50: [4.75, 5.00],
+    confidence68: [4.62, 5.08],
+    confidence90: [4.40, 5.30],
+    cutProbability25bps: 68,
+    cutProbability50bps: 22,
+    pauseProbability: 10,
+    hikeProbability: 0,
+    cumulativeCutBps: -50,
+    fomcDots: [4.88, 4.88, 4.88, 4.88, 4.88, 4.88, 5.12, 5.12, 4.62, 4.62],
+    fomcMedian: 4.88,
+    cmeImplied: 4.82,
+    priorMonthExpectedRate: 5.04,
+  },
+  {
+    meetingDate: 'Dec 16, 2026',
+    label: 'Dec 2026',
+    eventTicker: 'KXFED-26DEC',
+    expectedRate: 4.58,
+    medianRate: 4.62,
+    stdDev: 0.32,
+    confidence50: [4.38, 4.75],
+    confidence68: [4.26, 4.90],
+    confidence90: [4.00, 5.15],
+    cutProbability25bps: 62,
+    cutProbability50bps: 26,
+    pauseProbability: 12,
+    hikeProbability: 0,
+    cumulativeCutBps: -75,
+    fomcDots: [4.38, 4.62, 4.62, 4.62, 4.62, 4.88, 4.88, 4.88, 5.12, 4.38, 4.38],
+    fomcMedian: 4.62,
+    cmeImplied: 4.55,
+    priorMonthExpectedRate: 4.85,
+  },
+  {
+    meetingDate: 'Jan 27, 2027',
+    label: 'Jan 2027',
+    eventTicker: 'KXFED-27JAN',
+    expectedRate: 4.42,
+    medianRate: 4.38,
+    stdDev: 0.40,
+    confidence50: [4.15, 4.65],
+    confidence68: [4.02, 4.82],
+    confidence90: [3.70, 5.10],
+    cutProbability25bps: 58,
+    cutProbability50bps: 28,
+    pauseProbability: 14,
+    hikeProbability: 0,
+    cumulativeCutBps: -100,
+    fomcDots: [4.38, 4.38, 4.38, 4.62, 4.62, 4.12, 4.12, 4.88],
+    fomcMedian: 4.38,
+    cmeImplied: 4.38,
+    priorMonthExpectedRate: 4.70,
+  },
+  {
+    meetingDate: 'Mar 17, 2027',
+    label: 'Mar 2027',
+    eventTicker: 'KXFED-27MAR',
+    expectedRate: 4.25,
+    medianRate: 4.25,
+    stdDev: 0.48,
+    confidence50: [3.90, 4.55],
+    confidence68: [3.77, 4.73],
+    confidence90: [3.40, 5.05],
+    cutProbability25bps: 54,
+    cutProbability50bps: 30,
+    pauseProbability: 16,
+    hikeProbability: 0,
+    cumulativeCutBps: -100,
+    fomcDots: [3.88, 4.12, 4.12, 4.12, 4.38, 4.38, 4.62, 4.62, 3.62],
+    fomcMedian: 4.12,
+    cmeImplied: 4.20,
+    priorMonthExpectedRate: 4.55,
+  },
+  {
+    meetingDate: 'Jun 16, 2027',
+    label: 'Jun 2027',
+    eventTicker: 'KXFED-27JUN',
+    expectedRate: 4.15,
+    medianRate: 4.12,
+    stdDev: 0.54,
+    confidence50: [3.75, 4.45],
+    confidence68: [3.61, 4.69],
+    confidence90: [3.20, 5.00],
+    cutProbability25bps: 50,
+    cutProbability50bps: 32,
+    pauseProbability: 18,
+    hikeProbability: 0,
+    cumulativeCutBps: -125,
+    fomcDots: [3.62, 3.88, 3.88, 4.12, 4.12, 4.12, 4.38, 4.38, 4.62, 3.38],
+    fomcMedian: 4.12,
+    cmeImplied: 4.10,
+    priorMonthExpectedRate: 4.42,
+  },
+  {
+    meetingDate: 'Dec 15, 2027',
+    label: 'Dec 2027 (Year-End)',
+    eventTicker: 'KXFEDFUNDSYEAR-28JAN01',
+    expectedRate: 4.08,
+    medianRate: 4.05,
+    stdDev: 0.60,
+    confidence50: [3.62, 4.40],
+    confidence68: [3.48, 4.68],
+    confidence90: [3.00, 5.10],
+    cutProbability25bps: 48,
+    cutProbability50bps: 34,
+    pauseProbability: 18,
+    hikeProbability: 0,
+    cumulativeCutBps: -125,
+    fomcDots: [3.12, 3.38, 3.62, 3.88, 3.88, 3.88, 4.12, 4.12, 4.12, 4.38, 4.62, 4.88, 5.12],
+    fomcMedian: 3.88,
+    cmeImplied: 4.02,
+    priorMonthExpectedRate: 4.35,
+  },
+];
+
 
 // 1. Inflation in August 2026 (CPI YoY)
 const cpiContracts: StrikeContract[] = [
@@ -117,8 +282,10 @@ const cpiContracts: StrikeContract[] = [
   },
 ];
 
-const cpiBins = deriveBinsFromCumulativeStrikes(cpiContracts, '%');
+const { bins: cpiBins, arbitrageOpportunities: cpiArb, hasIlliquidStrikes: cpiIlliquid } =
+  deriveBinsFromCumulativeStrikes(cpiContracts, '%', 'midpoint');
 const cpiMoments = calculateStatisticalMoments(cpiBins, '%');
+
 
 // 2. US Real GDP Growth in Q3 2026
 const gdpContracts: StrikeContract[] = [
@@ -208,8 +375,10 @@ const gdpContracts: StrikeContract[] = [
   },
 ];
 
-const gdpBins = deriveBinsFromCumulativeStrikes(gdpContracts, '%');
+const { bins: gdpBins, arbitrageOpportunities: gdpArb, hasIlliquidStrikes: gdpIlliquid } =
+  deriveBinsFromCumulativeStrikes(gdpContracts, '%', 'midpoint');
 const gdpMoments = calculateStatisticalMoments(gdpBins, '%');
+
 
 // 3. Unemployment in August 2026
 const u3Contracts: StrikeContract[] = [
@@ -485,11 +654,14 @@ const fedContracts: StrikeContract[] = [
   },
 ];
 
-const u3Bins = deriveBinsFromCumulativeStrikes(u3Contracts, '%');
+const { bins: u3Bins, arbitrageOpportunities: u3Arb, hasIlliquidStrikes: u3Illiquid } =
+  deriveBinsFromCumulativeStrikes(u3Contracts, '%', 'midpoint');
 const u3Moments = calculateStatisticalMoments(u3Bins, '%');
 
-const fedBins = deriveBinsFromCumulativeStrikes(fedContracts, '%');
+const { bins: fedBins, arbitrageOpportunities: fedArb, hasIlliquidStrikes: fedIlliquid } =
+  deriveBinsFromCumulativeStrikes(fedContracts, '%', 'midpoint');
 const fedMoments = calculateStatisticalMoments(fedBins, '%');
+
 
 export const INITIAL_MACRO_MARKETS: MacroMarket[] = [
   {
@@ -511,10 +683,13 @@ export const INITIAL_MACRO_MARKETS: MacroMarket[] = [
     contracts: cpiContracts,
     bins: cpiBins,
     moments: cpiMoments,
+    pricingMethodology: 'midpoint',
+    arbitrageOpportunities: cpiArb,
+    hasIlliquidStrikes: cpiIlliquid,
     consensus: [
-      { source: 'Bloomberg Consensus', value: 3.30, date: 'Aug 14, 2026', differenceFromKalshiMode: 0.00 },
-      { source: 'Cleveland Fed Nowcast', value: 3.34, date: 'Aug 15, 2026', differenceFromKalshiMode: -0.04 },
-      { source: 'Wall Street Median', value: 3.25, date: 'Aug 12, 2026', differenceFromKalshiMode: 0.05 },
+      { source: 'Bloomberg Consensus', value: 3.30, date: 'Aug 14, 2026', differenceFromKalshiMode: 0.00, isStaticReference: true, sourceType: 'periodic_survey' },
+      { source: 'Cleveland Fed Nowcast', value: 3.34, date: 'Aug 15, 2026', differenceFromKalshiMode: -0.04, isStaticReference: false, sourceType: 'live_nowcast' },
+      { source: 'Wall Street Median', value: 3.25, date: 'Aug 12, 2026', differenceFromKalshiMode: 0.05, isStaticReference: true, sourceType: 'periodic_survey' },
     ],
     historicalForecastMean: [
       { timestamp: 'May 2026', mean: 3.65 },
@@ -522,15 +697,95 @@ export const INITIAL_MACRO_MARKETS: MacroMarket[] = [
       { timestamp: 'Jul 2026', mean: 3.38 },
       { timestamp: 'Aug 01', mean: 3.34 },
       { timestamp: 'Aug 08', mean: 3.32 },
-      { timestamp: 'Current', mean: 3.31 },
+      { timestamp: 'Live Order Book', mean: 3.31 },
     ],
+
     historicalSnapshots: [
-      { timestamp: 'May 2026', mean: 3.65, median: 3.60, stdDev: 0.22, confidence68: [3.43, 3.87], consensus: 3.60 },
-      { timestamp: 'Jun 2026', mean: 3.52, median: 3.50, stdDev: 0.20, confidence68: [3.32, 3.72], consensus: 3.50 },
-      { timestamp: 'Jul 2026', mean: 3.38, median: 3.35, stdDev: 0.18, confidence68: [3.20, 3.56], consensus: 3.40 },
-      { timestamp: 'Aug 01', mean: 3.34, median: 3.32, stdDev: 0.17, confidence68: [3.17, 3.51], consensus: 3.35 },
-      { timestamp: 'Aug 08', mean: 3.32, median: 3.30, stdDev: 0.16, confidence68: [3.16, 3.48], consensus: 3.30 },
-      { timestamp: 'Current', mean: 3.31, median: 3.30, stdDev: 0.15, confidence68: [3.16, 3.46], consensus: 3.30 },
+      { 
+        id: 'cpi-snap-1',
+        timestamp: 'May 15, 2026', 
+        label: 'Apr CPI Print',
+        headline: 'April CPI Prints Hot (+0.3% MoM)',
+        catalystDescription: 'April headline inflation came in above consensus (+0.3% MoM). Markets priced elevated summer inflation risks with broad uncertainty.',
+        mean: 3.65, 
+        median: 3.60, 
+        stdDev: 0.22, 
+        skewness: 0.45,
+        confidence68: [3.43, 3.87], 
+        confidence90: [3.28, 4.02],
+        consensus: 3.60 
+      },
+      { 
+        id: 'cpi-snap-2',
+        timestamp: 'Jun 12, 2026', 
+        label: 'FOMC Pause',
+        headline: 'FOMC Holds Policy Rate & Signals Disinflation',
+        catalystDescription: 'Federal Reserve held benchmark rates steady and highlighted softening supply chain pressures in updated projections.',
+        mean: 3.52, 
+        median: 3.50, 
+        stdDev: 0.20, 
+        skewness: 0.35,
+        confidence68: [3.32, 3.72], 
+        confidence90: [3.18, 3.86],
+        consensus: 3.50 
+      },
+      { 
+        id: 'cpi-snap-3',
+        timestamp: 'Jul 15, 2026', 
+        label: 'Jun CPI Drop',
+        headline: 'June CPI Drops to 3.0% YoY',
+        catalystDescription: 'Sharp deceleration in shelter and used vehicle prices caused a rapid downward shift in market expectations across the entire curve.',
+        mean: 3.38, 
+        median: 3.35, 
+        stdDev: 0.18, 
+        skewness: 0.25,
+        confidence68: [3.20, 3.56], 
+        confidence90: [3.08, 3.68],
+        consensus: 3.40 
+      },
+      { 
+        id: 'cpi-snap-4',
+        timestamp: 'Aug 01, 2026', 
+        label: 'July NFP Miss',
+        headline: 'July Payrolls Print Weak (+114k)',
+        catalystDescription: 'Labor market softening triggered macroeconomic cooling expectations and lower consumer demand projections.',
+        mean: 3.34, 
+        median: 3.32, 
+        stdDev: 0.17, 
+        skewness: 0.20,
+        confidence68: [3.17, 3.51], 
+        confidence90: [3.06, 3.62],
+        consensus: 3.35 
+      },
+      { 
+        id: 'cpi-snap-5',
+        timestamp: 'Aug 08, 2026', 
+        label: 'Oil Pullback',
+        headline: 'WTI Crude Oil Dips Below $74/bbl',
+        catalystDescription: 'Energy price contraction dampened headline energy input costs and tightened market variance corridor.',
+        mean: 3.32, 
+        median: 3.30, 
+        stdDev: 0.16, 
+        skewness: 0.18,
+        confidence68: [3.16, 3.48], 
+        confidence90: [3.05, 3.58],
+        consensus: 3.30 
+      },
+      { 
+        id: 'cpi-snap-live',
+        timestamp: 'Aug 19, 2026', 
+        label: 'Current Live',
+        headline: 'Live Market-Implied Distribution',
+        catalystDescription: 'Active Kalshi prediction market order book distribution, pricing 3.31% expected mean with 3.3%–3.4% modal peak.',
+        mean: 3.31, 
+        median: 3.30, 
+        stdDev: 0.15, 
+        skewness: 0.15,
+        confidence68: [3.16, 3.46], 
+        confidence90: [3.06, 3.56],
+        consensus: 3.30,
+        isLive: true
+      },
     ],
     description: 'Directly traded prediction market distribution for annual US headline CPI inflation for the August 2026 period.',
     summary: 'Market-implied expected value of 3.31% vs. Bloomberg Consensus of 3.30% (+1 bps spread). Modal mass is centered at 3.3%–3.4%. Tail risk prices an adverse 95% threshold at 3.75% with 18% upside shock probability (+0.42 skew).',
@@ -557,22 +812,25 @@ export const INITIAL_MACRO_MARKETS: MacroMarket[] = [
     contracts: gdpContracts,
     bins: gdpBins,
     moments: gdpMoments,
+    pricingMethodology: 'midpoint',
+    arbitrageOpportunities: gdpArb,
+    hasIlliquidStrikes: gdpIlliquid,
     consensus: [
-      { source: 'Atlanta Fed GDPNow', value: 2.30, date: 'Aug 15, 2026', differenceFromKalshiMode: -0.05 },
-      { source: 'Blue Chip Consensus', value: 2.00, date: 'Aug 10, 2026', differenceFromKalshiMode: 0.25 },
-      { source: 'NY Fed Staff Nowcast', value: 2.15, date: 'Aug 12, 2026', differenceFromKalshiMode: 0.10 },
+      { source: 'Atlanta Fed GDPNow', value: 2.30, date: 'Aug 15, 2026', differenceFromKalshiMode: -0.05, isStaticReference: false, sourceType: 'live_nowcast' },
+      { source: 'Blue Chip Consensus', value: 2.00, date: 'Aug 10, 2026', differenceFromKalshiMode: 0.25, isStaticReference: true, sourceType: 'periodic_survey' },
+      { source: 'NY Fed Staff Nowcast', value: 2.15, date: 'Aug 12, 2026', differenceFromKalshiMode: 0.10, isStaticReference: false, sourceType: 'live_nowcast' },
     ],
     historicalForecastMean: [
       { timestamp: 'Jun 2026', mean: 1.85 },
       { timestamp: 'Jul 2026', mean: 2.05 },
       { timestamp: 'Aug 01', mean: 2.18 },
-      { timestamp: 'Current', mean: 2.21 },
+      { timestamp: 'Live Order Book', mean: 2.21 },
     ],
     historicalSnapshots: [
       { timestamp: 'Jun 2026', mean: 1.85, median: 1.80, stdDev: 0.55, confidence68: [1.30, 2.40], consensus: 1.80 },
       { timestamp: 'Jul 2026', mean: 2.05, median: 2.00, stdDev: 0.50, confidence68: [1.55, 2.55], consensus: 1.95 },
       { timestamp: 'Aug 01', mean: 2.18, median: 2.15, stdDev: 0.48, confidence68: [1.70, 2.66], consensus: 2.10 },
-      { timestamp: 'Current', mean: 2.21, median: 2.20, stdDev: 0.46, confidence68: [1.75, 2.67], consensus: 2.15 },
+      { timestamp: 'Live Order Book', mean: 2.21, median: 2.20, stdDev: 0.46, confidence68: [1.75, 2.67], consensus: 2.15, isLive: true },
     ],
     description: 'Annualized quarter-over-quarter real gross domestic product growth rate for the 3rd quarter of 2026.',
     summary: 'Market-implied expected value of 2.21% vs. Atlanta Fed GDPNow of 2.30% (-9 bps spread). Modal mass is centered at 2.0%–2.5%. Tail risk prices an adverse recession cutoff (< 1.0% growth) at 4.0% probability (-0.18 skew).',
@@ -599,22 +857,25 @@ export const INITIAL_MACRO_MARKETS: MacroMarket[] = [
     contracts: u3Contracts,
     bins: u3Bins,
     moments: u3Moments,
+    pricingMethodology: 'midpoint',
+    arbitrageOpportunities: u3Arb,
+    hasIlliquidStrikes: u3Illiquid,
     consensus: [
-      { source: 'Bloomberg Consensus', value: 4.30, date: 'Aug 14, 2026', differenceFromKalshiMode: -0.05 },
-      { source: 'Dow Jones Survey', value: 4.25, date: 'Aug 12, 2026', differenceFromKalshiMode: 0.00 },
-      { source: 'Prior Month Actual', value: 4.30, date: 'Aug 01, 2026', differenceFromKalshiMode: -0.05 },
+      { source: 'Bloomberg Consensus', value: 4.30, date: 'Aug 14, 2026', differenceFromKalshiMode: -0.05, isStaticReference: true, sourceType: 'periodic_survey' },
+      { source: 'Dow Jones Survey', value: 4.25, date: 'Aug 12, 2026', differenceFromKalshiMode: 0.00, isStaticReference: true, sourceType: 'periodic_survey' },
+      { source: 'Prior Month Actual', value: 4.30, date: 'Aug 01, 2026', differenceFromKalshiMode: -0.05, isStaticReference: true, sourceType: 'periodic_survey' },
     ],
     historicalForecastMean: [
       { timestamp: 'May 2026', mean: 4.05 },
       { timestamp: 'Jun 2026', mean: 4.15 },
       { timestamp: 'Jul 2026', mean: 4.24 },
-      { timestamp: 'Current', mean: 4.26 },
+      { timestamp: 'Live Order Book', mean: 4.26 },
     ],
     historicalSnapshots: [
       { timestamp: 'May 2026', mean: 4.05, median: 4.00, stdDev: 0.16, confidence68: [3.89, 4.21], consensus: 4.00 },
       { timestamp: 'Jun 2026', mean: 4.15, median: 4.10, stdDev: 0.15, confidence68: [4.00, 4.30], consensus: 4.10 },
       { timestamp: 'Jul 2026', mean: 4.24, median: 4.20, stdDev: 0.14, confidence68: [4.10, 4.38], consensus: 4.20 },
-      { timestamp: 'Current', mean: 4.26, median: 4.25, stdDev: 0.13, confidence68: [4.13, 4.39], consensus: 4.25 },
+      { timestamp: 'Live Order Book', mean: 4.26, median: 4.25, stdDev: 0.13, confidence68: [4.13, 4.39], consensus: 4.25, isLive: true },
     ],
     description: 'Headline civilian unemployment rate (seasonally adjusted U-3 metric) for August 2026.',
     summary: 'Market-implied expected value of 4.26% vs. Bloomberg Consensus of 4.30% (-4 bps spread). Modal mass is centered at 4.2%–4.3%. Tail risk of a rapid spike above 4.4% is priced at 16% probability (+0.31 skew).',
@@ -641,10 +902,13 @@ export const INITIAL_MACRO_MARKETS: MacroMarket[] = [
     contracts: fedContracts,
     bins: fedBins,
     moments: fedMoments,
+    pricingMethodology: 'midpoint',
+    arbitrageOpportunities: fedArb,
+    hasIlliquidStrikes: fedIlliquid,
     consensus: [
-      { source: 'FOMC Median SEP (Dot Plot)', value: 3.88, date: 'Jun 2026', differenceFromKalshiMode: 0.20 },
-      { source: 'CME FedWatch Implied', value: 4.10, date: 'Aug 15, 2026', differenceFromKalshiMode: -0.02 },
-      { source: 'Primary Dealer Survey', value: 4.00, date: 'Aug 10, 2026', differenceFromKalshiMode: 0.08 },
+      { source: 'FOMC Median SEP (Dot Plot)', value: 3.88, date: 'Jun 2026', differenceFromKalshiMode: 0.20, isStaticReference: true, sourceType: 'periodic_survey' },
+      { source: 'CME FedWatch Implied', value: 4.10, date: 'Aug 15, 2026', differenceFromKalshiMode: -0.02, isStaticReference: false, sourceType: 'live_nowcast' },
+      { source: 'Primary Dealer Survey', value: 4.00, date: 'Aug 10, 2026', differenceFromKalshiMode: 0.08, isStaticReference: true, sourceType: 'periodic_survey' },
     ],
     historicalForecastMean: [
       { timestamp: 'May 2026', mean: 4.55 },
@@ -652,7 +916,7 @@ export const INITIAL_MACRO_MARKETS: MacroMarket[] = [
       { timestamp: 'Jul 2026', mean: 4.22 },
       { timestamp: 'Aug 01', mean: 4.14 },
       { timestamp: 'Aug 08', mean: 4.10 },
-      { timestamp: 'Current', mean: 4.08 },
+      { timestamp: 'Live Order Book', mean: 4.08 },
     ],
     historicalSnapshots: [
       { timestamp: 'May 2026', mean: 4.55, median: 4.50, stdDev: 0.65, confidence68: [3.90, 5.20], consensus: 4.25 },
@@ -660,8 +924,9 @@ export const INITIAL_MACRO_MARKETS: MacroMarket[] = [
       { timestamp: 'Jul 2026', mean: 4.22, median: 4.20, stdDev: 0.55, confidence68: [3.67, 4.77], consensus: 4.00 },
       { timestamp: 'Aug 01', mean: 4.14, median: 4.10, stdDev: 0.52, confidence68: [3.62, 4.66], consensus: 3.90 },
       { timestamp: 'Aug 08', mean: 4.10, median: 4.05, stdDev: 0.50, confidence68: [3.60, 4.60], consensus: 3.88 },
-      { timestamp: 'Current', mean: 4.08, median: 4.05, stdDev: 0.48, confidence68: [3.60, 4.56], consensus: 3.88 },
+      { timestamp: 'Live Order Book', mean: 4.08, median: 4.05, stdDev: 0.48, confidence68: [3.60, 4.56], consensus: 3.88, isLive: true },
     ],
+    ratePath: FED_RATE_PATH_PROJECTIONS,
     description: 'Directly traded prediction market distribution for the upper bound of the federal funds target rate range at year-end 2027.',
     summary: 'Market-implied expected value of 4.08% vs. FOMC Median SEP (Dot Plot) of 3.88% (+20 bps spread). Modal mass is centered at 3.75%–4.25%. Tail risk prices a high terminal rate threshold (> 5.00%) at 16% probability (+0.38 skew).',
     lastUpdated: new Date().toISOString(),
@@ -669,3 +934,4 @@ export const INITIAL_MACRO_MARKETS: MacroMarket[] = [
     isSnapshot: true,
   },
 ];
+

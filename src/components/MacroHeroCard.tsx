@@ -17,6 +17,7 @@ export const MacroHeroCard: React.FC<MacroHeroCardProps> = ({
   const { moments } = market;
   const relativeTime = useRelativeTime(market.lastUpdated);
 
+
   const skewDirection = moments.skewness > 0.15 
     ? 'Upside Skew' 
     : moments.skewness < -0.15 
@@ -46,7 +47,7 @@ export const MacroHeroCard: React.FC<MacroHeroCardProps> = ({
           <div className="flex items-center gap-2">
             <Info className="w-4 h-4 text-amber-600 shrink-0" />
             <span>
-              <strong>Viewing Reference Snapshot:</strong> Live Kalshi API could not be reached. Showing historical reference data.
+              <strong>Viewing Reference Snapshot:</strong> Live Kalshi API could not be reached. Showing reference snapshot data.
             </span>
           </div>
           {onRefresh && (
@@ -61,10 +62,23 @@ export const MacroHeroCard: React.FC<MacroHeroCardProps> = ({
         </div>
       )}
 
+
+      {/* Illiquid Strikes Notice */}
+      {market.hasIlliquidStrikes && (
+        <div className="mb-4 p-3 rounded-xl bg-blue-50 border-2 border-blue-300 text-blue-950 text-xs animate-fade-in">
+          <div className="flex items-center gap-2">
+            <Info className="w-4 h-4 text-blue-600 shrink-0" />
+            <span>
+              <strong>Quote Quality Notice:</strong> Some thin strikes lacked active quotes and have been monotonically bounded from adjacent strikes rather than assuming a default 50% coin-flip.
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Top row: Title, Meta, and Kalshi Link */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b-2 border-gray-300">
         <div>
-          <div className="flex items-center gap-2.5 flex-wrap mb-1.5">
+          <div className="flex items-center gap-2 flex-wrap mb-1.5">
             <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-md bg-gray-950 text-white">
               {market.eventTicker}
             </span>
@@ -93,6 +107,7 @@ export const MacroHeroCard: React.FC<MacroHeroCardProps> = ({
               <Clock className="w-3 h-3 text-gray-400" />
               <span>{relativeTime}</span>
             </span>
+
           </div>
 
           <h1 className="text-xl sm:text-2xl font-extrabold text-gray-950 tracking-tight">
@@ -115,6 +130,8 @@ export const MacroHeroCard: React.FC<MacroHeroCardProps> = ({
           </a>
         </div>
       </div>
+
+
 
       {/* Metric Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 py-5">
