@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -7,6 +8,19 @@ export default {
   theme: {
     extend: {
       colors: {
+        dark: {
+          bg: '#0B0F17',
+          card: '#131924',
+          cardHover: '#182130',
+          border: '#1F293D',
+          borderLight: '#26334D',
+          surface: '#1A2332',
+          surfaceHover: '#202B3D',
+          text: '#F8FAFC',
+          muted: '#94A3B8',
+          subtext: '#64748B',
+        },
+
         kalshi: {
           50: '#F0FDF4',
           100: '#DCFCE7',

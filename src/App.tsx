@@ -12,12 +12,12 @@ import { HedgingSimulator } from './components/HedgingSimulator';
 import { CustomMarketModal } from './components/CustomMarketModal';
 import { Footer } from './components/Footer';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ThemeProvider } from './context/ThemeContext';
 import { Analytics } from '@vercel/analytics/react';
 
-export function App() {
+function MacroDensityApp() {
   const {
     markets,
-    isLiveConnected,
     isRefreshing,
     refreshLive,
     addCustomMarket,
@@ -35,7 +35,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#111827] bg-grid-subtle">
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA] dark:bg-[#0B0F17] text-[#111827] dark:text-[#F8FAFC] bg-grid-subtle transition-colors duration-200">
       {/* Top Header */}
       <Header
         onOpenCustomMarket={() => setIsCustomMarketOpen(true)}
@@ -122,6 +122,12 @@ export function App() {
   );
 }
 
+export function App() {
+  return (
+    <ThemeProvider>
+      <MacroDensityApp />
+    </ThemeProvider>
+  );
+}
+
 export default App;
-
-

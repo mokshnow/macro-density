@@ -361,23 +361,20 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-black shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-6">
+    <div className="bg-white dark:bg-[#131924] rounded-2xl border-2 border-black dark:border-white shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-6 transition-colors">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b-2 border-gray-300 mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b-2 border-gray-300 dark:border-white/30 mb-5">
         <div>
-          <h3 className="text-base font-extrabold text-gray-950 tracking-tight">
+          <h3 className="text-base font-extrabold text-gray-950 dark:text-white tracking-tight">
             Stress Test
           </h3>
-          <p className="text-xs text-gray-600 font-medium">
-            Simulate macroeconomic shocks to dynamically reprice probability density, dispersion, and tail risk.
-          </p>
         </div>
 
         {/* Reset Button */}
         {isStressed && (
           <button
             onClick={resetToBaseline}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-800 hover:text-gray-950 bg-gray-100 hover:bg-gray-200 border-2 border-gray-400 rounded-xl transition-all self-start sm:self-auto shrink-0 shadow-2xs cursor-pointer active:scale-95"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-800 dark:text-gray-200 hover:text-gray-950 dark:hover:text-white bg-gray-100 dark:bg-[#1A2332] hover:bg-gray-200 dark:hover:bg-[#202B3D] border-2 border-gray-400 dark:border-white rounded-xl transition-all self-start sm:self-auto shrink-0 shadow-2xs cursor-pointer active:scale-95"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset to Base Case</span>
@@ -387,7 +384,7 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
 
       {/* Preset Scenarios */}
       <div className="mb-5">
-        <div className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2.5">
+        <div className="text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2.5">
           Quick Preset Shocks:
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -399,20 +396,20 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
                 onClick={() => applyPreset(preset)}
                 className={`p-3.5 text-left rounded-xl border-2 transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-amber-50 border-amber-500 shadow-sm ring-2 ring-amber-400/30'
-                    : 'bg-gray-50/70 hover:bg-white border-gray-300 hover:border-gray-400 shadow-2xs'
+                    ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-500 dark:border-amber-500 shadow-sm ring-2 ring-amber-400/30'
+                    : 'bg-gray-50/70 dark:bg-[#1A2332] hover:bg-white dark:hover:bg-[#202B3D] border-gray-300 dark:border-white/30 hover:border-gray-400 dark:hover:border-white/60 shadow-2xs'
                 }`}
               >
                 <div>
-                  <div className="text-xs font-extrabold text-gray-950 flex items-center justify-between gap-1.5">
+                  <div className="text-xs font-extrabold text-gray-950 dark:text-white flex items-center justify-between gap-1.5">
                     <span>{preset.name}</span>
                     {isSelected && (
-                      <span className="text-[10px] bg-amber-200 text-amber-950 font-black px-1.5 py-0.2 rounded font-mono">
+                      <span className="text-[10px] bg-amber-200 dark:bg-amber-900/80 text-amber-950 dark:text-amber-100 font-black px-1.5 py-0.2 rounded font-mono">
                         ACTIVE
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] text-gray-600 font-semibold mt-1 leading-tight">
+                  <div className="text-[11px] text-gray-600 dark:text-gray-400 font-semibold mt-1 leading-tight">
                     {preset.description}
                   </div>
                 </div>
@@ -422,21 +419,20 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
         </div>
       </div>
 
-
       {/* Interactive Shock Sliders */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5 p-4 rounded-xl bg-gray-50/80 border-2 border-gray-300">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5 p-4 rounded-xl bg-gray-50/80 dark:bg-[#1A2332] border-2 border-gray-300 dark:border-white/30">
         {/* Slider 1: Mean Shift */}
-        <div className="p-3.5 bg-white rounded-xl border-2 border-gray-300 shadow-2xs">
+        <div className="p-3.5 bg-white dark:bg-[#131924] rounded-xl border-2 border-gray-300 dark:border-white/30 shadow-2xs">
           <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-bold text-gray-800">
+            <label className="text-xs font-bold text-gray-800 dark:text-gray-200">
               Mean Shock (Δ µ)
             </label>
             <span className={`font-mono text-xs font-black px-2 py-0.5 rounded ${
               meanShift > 0 
-                ? 'bg-amber-100 text-amber-900 border border-amber-300' 
+                ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60' 
                 : meanShift < 0 
-                ? 'bg-blue-100 text-blue-900 border border-blue-300' 
-                : 'bg-gray-100 text-gray-800 border border-gray-200'
+                ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-900 dark:text-blue-300 border border-blue-300 dark:border-blue-700/60' 
+                : 'bg-gray-100 dark:bg-[#1E293B] text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-[#2D3D58]'
             }`}>
               {meanShift > 0 ? `+${meanShift.toFixed(2)}` : meanShift.toFixed(2)}{unitSuffix}
             </span>
@@ -452,39 +448,38 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
               setSelectedPresetId(null);
               setMeanShift(parseFloat(e.target.value));
             }}
-            className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#00D26A]"
+            className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#00D26A]"
           />
 
-          <div className="flex items-center justify-between mt-2 pt-1 border-t border-gray-100">
+          <div className="flex items-center justify-between mt-2 pt-1 border-t border-gray-100 dark:border-[#1F293D]">
             <button
               onClick={() => { setSelectedPresetId(null); setMeanShift((prev) => Math.max(-1.00, Number((prev - 0.05).toFixed(2)))); }}
-              className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300"
+              className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 dark:bg-[#1A2332] hover:bg-gray-200 dark:hover:bg-[#202B3D] text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-[#2D3D58] cursor-pointer"
             >
               -0.05
             </button>
-            <span className="text-[10px] text-gray-500 font-mono font-semibold">Baseline: 0.00{unitSuffix}</span>
+            <span className="text-[10px] text-gray-500 dark:text-gray-400 font-mono font-semibold">Baseline: 0.00{unitSuffix}</span>
             <button
               onClick={() => { setSelectedPresetId(null); setMeanShift((prev) => Math.min(1.00, Number((prev + 0.05).toFixed(2)))); }}
-              className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300"
+              className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 dark:bg-[#1A2332] hover:bg-gray-200 dark:hover:bg-[#202B3D] text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-[#2D3D58] cursor-pointer"
             >
               +0.05
             </button>
           </div>
         </div>
 
-
         {/* Slider 2: Volatility Multiplier */}
-        <div className="p-3.5 bg-white rounded-xl border-2 border-gray-300 shadow-2xs">
+        <div className="p-3.5 bg-white dark:bg-[#131924] rounded-xl border-2 border-gray-300 dark:border-white/30 shadow-2xs">
           <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-bold text-gray-800">
+            <label className="text-xs font-bold text-gray-800 dark:text-gray-200">
               Implied Vol (× σ)
             </label>
             <span className={`font-mono text-xs font-black px-2 py-0.5 rounded ${
               volMultiplier > 1.0 
-                ? 'bg-rose-100 text-rose-900 border border-rose-300' 
+                ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-700/60' 
                 : volMultiplier < 1.0 
-                ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' 
-                : 'bg-gray-100 text-gray-800 border border-gray-200'
+                ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60' 
+                : 'bg-gray-100 dark:bg-[#1E293B] text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-[#2D3D58]'
             }`}>
               {volMultiplier.toFixed(1)}x
             </span>
@@ -500,20 +495,20 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
               setSelectedPresetId(null);
               setVolMultiplier(parseFloat(e.target.value));
             }}
-            className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#00D26A]"
+            className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#00D26A]"
           />
 
-          <div className="flex items-center justify-between mt-2 pt-1 border-t border-gray-100">
+          <div className="flex items-center justify-between mt-2 pt-1 border-t border-gray-100 dark:border-white/20">
             <button
               onClick={() => { setSelectedPresetId(null); setVolMultiplier((prev) => Math.max(0.5, Number((prev - 0.1).toFixed(1)))); }}
-              className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300"
+              className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 dark:bg-[#1A2332] hover:bg-gray-200 dark:hover:bg-[#202B3D] text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-white/30 cursor-pointer"
             >
               -0.1x
             </button>
-            <span className="text-[10px] text-gray-500 font-mono font-semibold">1.0x (Live)</span>
+            <span className="text-[10px] text-gray-500 dark:text-gray-400 font-mono font-semibold">1.0x (Live)</span>
             <button
               onClick={() => { setSelectedPresetId(null); setVolMultiplier((prev) => Math.min(2.5, Number((prev + 0.1).toFixed(1)))); }}
-              className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300"
+              className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 dark:bg-[#1A2332] hover:bg-gray-200 dark:hover:bg-[#202B3D] text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-white/30 cursor-pointer"
             >
               +0.1x
             </button>
@@ -521,17 +516,17 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
         </div>
 
         {/* Slider 3: Skewness Shift */}
-        <div className="p-3.5 bg-white rounded-xl border-2 border-gray-300 shadow-2xs">
+        <div className="p-3.5 bg-white dark:bg-[#131924] rounded-xl border-2 border-gray-300 dark:border-white/30 shadow-2xs">
           <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-bold text-gray-800">
+            <label className="text-xs font-bold text-gray-800 dark:text-gray-200">
               Tail Skew (Δ γ₁)
             </label>
             <span className={`font-mono text-xs font-black px-2 py-0.5 rounded ${
               skewShift > 0 
-                ? 'bg-amber-100 text-amber-900 border border-amber-300' 
+                ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60' 
                 : skewShift < 0 
-                ? 'bg-blue-100 text-blue-900 border border-blue-300' 
-                : 'bg-gray-100 text-gray-800 border border-gray-200'
+                ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-900 dark:text-blue-300 border border-blue-300 dark:border-blue-700/60' 
+                : 'bg-gray-100 dark:bg-[#1E293B] text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-[#2D3D58]'
             }`}>
               {skewShift > 0 ? `+${skewShift.toFixed(2)}` : skewShift.toFixed(2)}
             </span>
@@ -547,20 +542,20 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
               setSelectedPresetId(null);
               setSkewShift(parseFloat(e.target.value));
             }}
-            className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#00D26A]"
+            className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#00D26A]"
           />
 
-          <div className="flex items-center justify-between mt-2 pt-1 border-t border-gray-100">
+          <div className="flex items-center justify-between mt-2 pt-1 border-t border-gray-100 dark:border-white/20">
             <button
               onClick={() => { setSelectedPresetId(null); setSkewShift((prev) => Math.max(-0.80, Number((prev - 0.1).toFixed(1)))); }}
-              className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300"
+              className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 dark:bg-[#1A2332] hover:bg-gray-200 dark:hover:bg-[#202B3D] text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-white/30 cursor-pointer"
             >
               -0.10
             </button>
-            <span className="text-[10px] text-gray-500 font-mono font-semibold">0.0 (Symmetric)</span>
+            <span className="text-[10px] text-gray-500 dark:text-gray-400 font-mono font-semibold">0.0 (Symmetric)</span>
             <button
               onClick={() => { setSelectedPresetId(null); setSkewShift((prev) => Math.min(0.80, Number((prev + 0.1).toFixed(1)))); }}
-              className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300"
+              className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 dark:bg-[#1A2332] hover:bg-gray-200 dark:hover:bg-[#202B3D] text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-white/30 cursor-pointer"
             >
               +0.10
             </button>
@@ -569,20 +564,20 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
       </div>
 
       {/* Dual Curve Visualization Overlay */}
-      <div className="relative w-full bg-white rounded-xl border-2 border-gray-400 p-4 mb-5 overflow-hidden shadow-2xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 mb-3 gap-2">
-          <span className="text-xs font-extrabold text-gray-950">
+      <div className="relative w-full bg-white dark:bg-[#0E1420] rounded-xl border-2 border-gray-400 dark:border-white/30 p-4 mb-5 overflow-hidden shadow-2xs transition-colors">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 dark:border-white/20 mb-3 gap-2">
+          <span className="text-xs font-extrabold text-gray-950 dark:text-white">
             Probability Density Shift Overlay
           </span>
 
           <div className="flex items-center gap-4 text-xs font-mono font-bold">
             <div className="flex items-center gap-1.5">
               <span className="w-3.5 h-1 bg-[#00D26A] rounded-full inline-block"></span>
-              <span className="text-gray-700">Live Kalshi Base ({moments.mean}{unitSuffix})</span>
+              <span className="text-gray-700 dark:text-gray-300">Live Kalshi Base ({moments.mean}{unitSuffix})</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-3.5 h-1 bg-amber-500 rounded-full inline-block border-t-2 border-dashed border-amber-600"></span>
-              <span className="text-amber-800">Stressed Scenario ({stressedMean}{unitSuffix})</span>
+              <span className="text-amber-800 dark:text-amber-400">Stressed Scenario ({stressedMean}{unitSuffix})</span>
             </div>
           </div>
         </div>
@@ -615,7 +610,8 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
                 y1={yPos}
                 x2={svgWidth - padding.right}
                 y2={yPos}
-                stroke="#F3F4F6"
+                stroke="currentColor"
+                className="text-gray-100 dark:text-gray-800/80"
                 strokeWidth="1"
               />
             );
@@ -641,17 +637,18 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
               <path
                 d={stressCurvePath}
                 fill="none"
-                stroke="#D97706"
+                stroke="#F59E0B"
                 strokeWidth="3"
                 strokeDasharray="5 3"
                 strokeLinecap="round"
+                className="dark:drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]"
               />
               <line
                 x1={scaleX(stressedMean)}
                 y1={padding.top}
                 x2={scaleX(stressedMean)}
                 y2={padding.top + graphHeight}
-                stroke="#D97706"
+                stroke="#F59E0B"
                 strokeWidth="2"
                 strokeDasharray="4 2"
               />
@@ -666,7 +663,8 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
                 y1={padding.top}
                 x2={hoverCursor.svgX}
                 y2={padding.top + graphHeight}
-                stroke="#111827"
+                stroke="currentColor"
+                className="text-gray-900 dark:text-gray-100"
                 strokeWidth="1.5"
                 strokeDasharray="2 2"
                 opacity="0.8"
@@ -675,7 +673,7 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
                 cx={hoverCursor.svgX}
                 cy={hoverCursor.svgY}
                 r="5"
-                fill="#D97706"
+                fill="#F59E0B"
                 stroke="#FFFFFF"
                 strokeWidth="2"
               />
@@ -688,7 +686,8 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
             y1={padding.top + graphHeight}
             x2={svgWidth - padding.right}
             y2={padding.top + graphHeight}
-            stroke="#9CA3AF"
+            stroke="currentColor"
+            className="text-gray-400 dark:text-gray-600"
             strokeWidth="1.5"
           />
           {bins.map((b) => (
@@ -698,14 +697,16 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
                 y1={padding.top + graphHeight}
                 x2={scaleX(b.midpoint)}
                 y2={padding.top + graphHeight + 4}
-                stroke="#9CA3AF"
+                stroke="currentColor"
+                className="text-gray-400 dark:text-gray-600"
               />
               <text
                 x={scaleX(b.midpoint)}
                 y={padding.top + graphHeight + 16}
                 textAnchor="middle"
                 fontSize="10"
-                fill="#4B5563"
+                fill="currentColor"
+                className="text-gray-600 dark:text-gray-400"
                 fontWeight="bold"
                 fontFamily="JetBrains Mono, monospace"
               >
@@ -718,7 +719,7 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
         {/* Hover Crosshair Callout */}
         {hoverCursor && (
           <div
-            className="absolute z-20 pointer-events-none bg-gray-950 text-white px-3 py-2 rounded-xl text-xs shadow-xl border-2 border-gray-700 font-mono transition-transform duration-75"
+            className="absolute z-20 pointer-events-none bg-gray-950 dark:bg-[#1A2332] text-white px-3 py-2 rounded-xl text-xs shadow-xl border-2 border-gray-700 dark:border-gray-600 font-mono transition-transform duration-75"
             style={{
               left: `${(hoverCursor.svgX / svgWidth) * 100}%`,
               top: `${Math.max(10, ((hoverCursor.svgY - 20) / svgHeight) * 100)}%`,
@@ -745,8 +746,8 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
       {/* Repriced Metric Comparison Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-5">
         {/* Metric 1: Expected Value */}
-        <div className="p-4 rounded-xl bg-gray-50/70 border-2 border-gray-300 hover:border-gray-400 shadow-xs transition-colors">
-          <div className="text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+        <div className="p-4 rounded-xl bg-gray-50/70 dark:bg-[#1A2332] border-2 border-gray-300 dark:border-white/30 hover:border-gray-400 dark:hover:border-white/60 shadow-xs transition-colors">
+          <div className="text-[11px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">
             Expected Value (µ)
           </div>
           <div className="flex items-baseline gap-2">
@@ -755,19 +756,19 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
             </span>
             <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
             <span className={`font-mono text-base font-black ${
-              stressedMean !== moments.mean ? 'text-amber-800' : 'text-gray-950'
+              stressedMean !== moments.mean ? 'text-amber-800 dark:text-amber-300' : 'text-gray-950 dark:text-white'
             }`}>
               {stressedMean}{unitSuffix}
             </span>
           </div>
-          <div className="text-[11px] text-gray-600 font-semibold mt-1">
+          <div className="text-[11px] text-gray-600 dark:text-gray-400 font-semibold mt-1">
             {meanShift >= 0 ? `+${(meanShift * 100).toFixed(0)} bps` : `${(meanShift * 100).toFixed(0)} bps`} shift
           </div>
         </div>
 
         {/* Metric 2: 1-Sigma Volatility */}
-        <div className="p-4 rounded-xl bg-gray-50/70 border-2 border-gray-300 hover:border-gray-400 shadow-xs transition-colors">
-          <div className="text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+        <div className="p-4 rounded-xl bg-gray-50/70 dark:bg-[#1A2332] border-2 border-gray-300 dark:border-white/30 hover:border-gray-400 dark:hover:border-white/60 shadow-xs transition-colors">
+          <div className="text-[11px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">
             Implied Vol (1 Std Dev)
           </div>
           <div className="flex items-baseline gap-2">
@@ -776,19 +777,19 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
             </span>
             <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
             <span className={`font-mono text-base font-black ${
-              stressedStdDev !== moments.stdDev ? 'text-amber-800' : 'text-gray-950'
+              stressedStdDev !== moments.stdDev ? 'text-amber-800 dark:text-amber-300' : 'text-gray-950 dark:text-white'
             }`}>
               ±{stressedStdDev}{unitSuffix}
             </span>
           </div>
-          <div className="text-[11px] text-gray-600 font-semibold mt-1">
+          <div className="text-[11px] text-gray-600 dark:text-gray-400 font-semibold mt-1">
             {volMultiplier > 1 ? `+${Math.round((volMultiplier - 1) * 100)}% expansion` : `${Math.round((volMultiplier - 1) * 100)}% compression`}
           </div>
         </div>
 
         {/* Metric 3: 95% VaR Threshold */}
-        <div className="p-4 rounded-xl bg-gray-50/70 border-2 border-gray-300 hover:border-gray-400 shadow-xs transition-colors">
-          <div className="text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+        <div className="p-4 rounded-xl bg-gray-50/70 dark:bg-[#1A2332] border-2 border-gray-300 dark:border-white/30 hover:border-gray-400 dark:hover:border-white/60 shadow-xs transition-colors">
+          <div className="text-[11px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">
             95% VaR Threshold
           </div>
           <div className="flex items-baseline gap-2">
@@ -796,18 +797,18 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
               {moments.var95}{unitSuffix}
             </span>
             <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
-            <span className="font-mono text-base font-black text-rose-600">
+            <span className="font-mono text-base font-black text-rose-600 dark:text-rose-400">
               {stressedVar95}{unitSuffix}
             </span>
           </div>
-          <div className="text-[11px] text-gray-600 font-semibold mt-1">
+          <div className="text-[11px] text-gray-600 dark:text-gray-400 font-semibold mt-1">
             {stressedVar95 >= moments.var95 ? `+${((stressedVar95 - moments.var95) * 100).toFixed(0)} bps higher tail risk` : `${((stressedVar95 - moments.var95) * 100).toFixed(0)} bps lower tail risk`}
           </div>
         </div>
 
         {/* Metric 4: Tail Event Probability */}
-        <div className="p-4 rounded-xl bg-gray-50/70 border-2 border-gray-300 hover:border-gray-400 shadow-xs transition-colors">
-          <div className="text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+        <div className="p-4 rounded-xl bg-gray-50/70 dark:bg-[#1A2332] border-2 border-gray-300 dark:border-white/30 hover:border-gray-400 dark:hover:border-white/60 shadow-xs transition-colors">
+          <div className="text-[11px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">
             Tail Shock Prob (&gt; 1.5σ)
           </div>
           <div className="flex items-baseline gap-2">
@@ -815,11 +816,11 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
               {moments.upsideTailProb}%
             </span>
             <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
-            <span className="font-mono text-base font-black text-amber-800">
+            <span className="font-mono text-base font-black text-amber-800 dark:text-amber-300">
               {stressedTailProb}%
             </span>
           </div>
-          <div className="text-[11px] text-gray-600 font-semibold mt-1">
+          <div className="text-[11px] text-gray-600 dark:text-gray-400 font-semibold mt-1">
             {stressedTailProb >= moments.upsideTailProb ? `+${(stressedTailProb - moments.upsideTailProb).toFixed(1)}% surge` : `${(stressedTailProb - moments.upsideTailProb).toFixed(1)}% decrease`}
           </div>
         </div>
@@ -827,26 +828,25 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
 
       {/* Quant Portfolio Hedging Impact Breakdown */}
       {isStressed && (
-        <div className="p-4 rounded-xl bg-amber-50/90 border-2 border-amber-400 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="p-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border-2 border-amber-400 dark:border-amber-700/60 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
           <div>
-            <div className="text-xs font-bold text-amber-950 uppercase tracking-wider">
+            <div className="text-xs font-bold text-amber-950 dark:text-amber-300 uppercase tracking-wider">
               Stress Scenario Hedging Impact
             </div>
-            <div className="text-sm font-semibold text-gray-900 mt-0.5">
-              Required hedge size increases to <strong className="font-mono text-amber-950 font-black">{stressedContracts.toLocaleString()}</strong> contracts (Est. portfolio loss: ${stressedLossEstimate.toLocaleString()}).
+            <div className="text-sm font-semibold text-gray-900 dark:text-gray-200 mt-0.5">
+              Required hedge size increases to <strong className="font-mono text-amber-950 dark:text-amber-200 font-black">{stressedContracts.toLocaleString()}</strong> contracts (Est. portfolio loss: ${stressedLossEstimate.toLocaleString()}).
             </div>
           </div>
 
-
-          <div className="flex items-center gap-5 border-t md:border-t-0 md:border-l-2 border-amber-300 pt-3 md:pt-0 md:pl-5 shrink-0">
+          <div className="flex items-center gap-5 border-t md:border-t-0 md:border-l-2 border-amber-300 dark:border-amber-700/60 pt-3 md:pt-0 md:pl-5 shrink-0">
             <div>
-              <div className="text-[10px] uppercase text-amber-900 font-bold tracking-wider">
+              <div className="text-[10px] uppercase text-amber-900 dark:text-amber-300 font-bold tracking-wider">
                 Stressed Hedge Premium
               </div>
-              <div className="text-base font-black font-mono text-gray-950">
+              <div className="text-base font-black font-mono text-gray-950 dark:text-white">
                 ${stressedHedgePremium.toLocaleString()}
               </div>
-              <div className={`text-[10px] font-mono font-bold ${deltaHedgePremium >= 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
+              <div className={`text-[10px] font-mono font-bold ${deltaHedgePremium >= 0 ? 'text-rose-700 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
                 {deltaHedgePremium >= 0 ? `+$${deltaHedgePremium.toLocaleString()} (+${Math.round((deltaHedgePremium / baseHedgeCost) * 100)}%)` : `-$${Math.abs(deltaHedgePremium).toLocaleString()}`}
               </div>
             </div>
@@ -856,3 +856,4 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
     </div>
   );
 };
+

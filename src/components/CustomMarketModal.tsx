@@ -52,25 +52,25 @@ export const CustomMarketModal: React.FC<CustomMarketModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-2xl border-2 border-black shadow-elevated max-w-xl w-full max-h-[90vh] overflow-y-auto p-6">
-        <div className="flex items-start justify-between pb-4 border-b-2 border-gray-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white dark:bg-[#131924] rounded-2xl border-2 border-black dark:border-white shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 transition-colors">
+        <div className="flex items-start justify-between pb-4 border-b-2 border-gray-300 dark:border-white/30">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-emerald-50 text-[#00A854] border-2 border-[#BBF7D0]">
+            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-[#00A854] dark:text-[#00E676] border-2 border-[#BBF7D0] dark:border-emerald-800/60">
               <Link2 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-gray-950 tracking-tight">
+              <h2 className="text-base font-extrabold text-gray-950 dark:text-white tracking-tight">
                 Import Live Kalshi Market
               </h2>
-              <p className="text-xs text-gray-600 font-medium">
+              <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">
                 Fetch and construct live probability distributions from active Kalshi events
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-500 hover:text-gray-950 hover:bg-gray-100 transition-colors border-2 border-gray-300 cursor-pointer"
+            className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-950 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#1A2332] transition-colors border-2 border-gray-300 dark:border-white cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -79,7 +79,7 @@ export const CustomMarketModal: React.FC<CustomMarketModalProps> = ({
         {/* URL Form */}
         <form onSubmit={handleUrlSubmit} className="mt-5 space-y-4">
           <div>
-            <label className="block text-xs font-bold text-gray-800 mb-1.5">
+            <label className="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-1.5">
               Kalshi Market URL or Event Ticker
             </label>
             <div className="relative">
@@ -88,15 +88,15 @@ export const CustomMarketModal: React.FC<CustomMarketModalProps> = ({
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 placeholder="KXCPIYOY-26AUG or https://kalshi.com/markets/..."
-                className="w-full px-3.5 py-2.5 text-xs font-mono bg-gray-50 border-2 border-gray-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
+                className="w-full px-3.5 py-2.5 text-xs font-mono bg-gray-50 dark:bg-[#1A2332] border-2 border-gray-300 dark:border-white/30 rounded-xl focus:bg-white dark:focus:bg-[#202B3D] focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A] text-gray-950 dark:text-white"
               />
             </div>
-            <div className="flex items-center gap-2 mt-2 text-[11px] text-gray-600 flex-wrap">
+            <div className="flex items-center gap-2 mt-2 text-[11px] text-gray-600 dark:text-gray-400 flex-wrap">
               <span className="font-medium">Active Examples:</span>
               <button
                 type="button"
                 onClick={() => setUrlInput('KXCPIYOY-26AUG')}
-                className="text-[#008A45] hover:underline font-mono font-bold cursor-pointer"
+                className="text-[#008A45] dark:text-[#00E676] hover:underline font-mono font-bold cursor-pointer"
               >
                 KXCPIYOY-26AUG
               </button>
@@ -104,7 +104,7 @@ export const CustomMarketModal: React.FC<CustomMarketModalProps> = ({
               <button
                 type="button"
                 onClick={() => setUrlInput('KXGDP-26OCT30')}
-                className="text-[#008A45] hover:underline font-mono font-bold cursor-pointer"
+                className="text-[#008A45] dark:text-[#00E676] hover:underline font-mono font-bold cursor-pointer"
               >
                 KXGDP-26OCT30
               </button>
@@ -112,7 +112,7 @@ export const CustomMarketModal: React.FC<CustomMarketModalProps> = ({
               <button
                 type="button"
                 onClick={() => setUrlInput('KXU3-26AUG')}
-                className="text-[#008A45] hover:underline font-mono font-bold cursor-pointer"
+                className="text-[#008A45] dark:text-[#00E676] hover:underline font-mono font-bold cursor-pointer"
               >
                 KXU3-26AUG
               </button>
@@ -120,8 +120,8 @@ export const CustomMarketModal: React.FC<CustomMarketModalProps> = ({
           </div>
 
           {errorMessage && (
-            <div className="p-3.5 rounded-xl bg-rose-50 text-rose-900 text-xs border-2 border-rose-300 font-medium flex items-start gap-2.5 animate-fade-in">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+            <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-900 dark:text-rose-200 text-xs border-2 border-rose-300 dark:border-rose-700/60 font-medium flex items-start gap-2.5 animate-fade-in">
+              <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
               <div>
                 <span className="font-bold">Live Fetch Failed: </span>
                 <span>{errorMessage}</span>
@@ -141,7 +141,7 @@ export const CustomMarketModal: React.FC<CustomMarketModalProps> = ({
               </>
             ) : (
               <>
-                <span>Fetch & Build Distribution</span>
+                <span>Fetch &amp; Build Distribution</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

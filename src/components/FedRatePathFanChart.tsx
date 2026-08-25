@@ -1,16 +1,9 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { FedMeetingProjection } from '../types/market';
 import { 
-  TrendingDown, 
-  Layers, 
-  CircleDot, 
-  History, 
   Info, 
   ChevronDown, 
   ChevronUp, 
-  ExternalLink,
-  Calendar,
-  Zap,
   Activity
 } from 'lucide-react';
 
@@ -165,15 +158,15 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
   const totalEasingBps = finalMeeting ? Math.round((ratePath[0].expectedRate - finalMeeting.expectedRate) * 100) : 125;
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-black shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-6">
+    <div className="bg-white dark:bg-[#131924] rounded-2xl border-2 border-black dark:border-white shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-6 transition-colors">
       {/* Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b-2 border-gray-300 mb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b-2 border-gray-300 dark:border-white/30 mb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-gray-950 text-white">
+            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-gray-950 dark:bg-gray-800 text-white border border-gray-800 dark:border-gray-700">
               FOMC POLICY TRAJECTORY
             </span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 text-[#008A45] border-2 border-[#BBF7D0] text-xs font-extrabold shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-[#008A45] dark:text-[#00E676] border-2 border-[#BBF7D0] dark:border-emerald-800/60 text-xs font-extrabold shadow-2xs">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -181,10 +174,10 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
               <span>TERM STRUCTURE FAN CHART</span>
             </span>
           </div>
-          <h2 className="text-lg sm:text-xl font-extrabold text-gray-950 tracking-tight">
+          <h2 className="text-lg sm:text-xl font-extrabold text-gray-950 dark:text-white tracking-tight">
             Fed Funds Implied Rate Path &amp; Uncertainty Fan
           </h2>
-          <p className="text-xs text-gray-600 font-medium mt-0.5">
+          <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mt-0.5">
             Bank of England-style probability fan chart derived from Kalshi binary contracts across FOMC meetings.
           </p>
         </div>
@@ -193,9 +186,9 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setShowModelDetails(!showModelDetails)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-700 hover:text-gray-950 bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 rounded-xl transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-gray-950 dark:hover:text-white bg-gray-50 dark:bg-[#1A2332] hover:bg-gray-100 dark:hover:bg-[#202B3D] border-2 border-gray-300 dark:border-white rounded-xl transition-colors cursor-pointer"
           >
-            <Info className="w-3.5 h-3.5 text-[#008A45]" />
+            <Info className="w-3.5 h-3.5 text-[#008A45] dark:text-[#00E676]" />
             <span>Fan Chart Methodology</span>
             {showModelDetails ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
@@ -204,25 +197,25 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
 
       {/* Methodology Accordion */}
       {showModelDetails && (
-        <div className="mb-4 p-4 rounded-xl bg-gray-50 border-2 border-gray-300 text-xs text-gray-700 space-y-2 animate-in fade-in duration-150">
-          <div className="font-extrabold text-gray-950 flex items-center gap-2">
-            <Activity className="w-4 h-4 text-[#008A45]" />
+        <div className="mb-4 p-4 rounded-xl bg-gray-50 dark:bg-[#1A2332] border-2 border-gray-300 dark:border-white/30 text-xs text-gray-700 dark:text-gray-300 space-y-2 animate-in fade-in duration-150">
+          <div className="font-extrabold text-gray-950 dark:text-white flex items-center gap-2">
+            <Activity className="w-4 h-4 text-[#008A45] dark:text-[#00E676]" />
             <span>Bank of England &amp; FOMC Fan Chart Formulation</span>
           </div>
           <p className="leading-relaxed">
             The fan chart represents expanding probability corridors over time as policy horizons extend. Kalshi strike contracts for each FOMC meeting (P(R_t &gt; K_i)) generate discrete state-price densities, from which quantiles are extracted:
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 font-mono text-[11px]">
-            <div className="p-2.5 bg-white rounded-lg border border-gray-200">
-              <strong className="text-emerald-800 block mb-0.5">50% Core (Dark Green):</strong>
+            <div className="p-2.5 bg-white dark:bg-[#131924] rounded-lg border border-gray-200 dark:border-white/20">
+              <strong className="text-emerald-800 dark:text-emerald-400 block mb-0.5">50% Core (Dark Green):</strong>
               <span>Interquartile Range [p25, p75] containing 50% of the market mass.</span>
             </div>
-            <div className="p-2.5 bg-white rounded-lg border border-gray-200">
-              <strong className="text-emerald-700 block mb-0.5">68% Band (1-Sigma):</strong>
+            <div className="p-2.5 bg-white dark:bg-[#131924] rounded-lg border border-gray-200 dark:border-white/20">
+              <strong className="text-emerald-700 dark:text-emerald-400 block mb-0.5">68% Band (1-Sigma):</strong>
               <span>[p16, p84] corresponds to ±1 standard deviation of policy uncertainty.</span>
             </div>
-            <div className="p-2.5 bg-white rounded-lg border border-gray-200">
-              <strong className="text-emerald-600 block mb-0.5">90% Tail Corridor:</strong>
+            <div className="p-2.5 bg-white dark:bg-[#131924] rounded-lg border border-gray-200 dark:border-white/20">
+              <strong className="text-emerald-600 dark:text-emerald-400 block mb-0.5">90% Tail Corridor:</strong>
               <span>[p05, p95] covering the vast majority of terminal rate outcomes.</span>
             </div>
           </div>
@@ -230,7 +223,7 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
       )}
 
       {/* Main Fan Chart SVG */}
-      <div className="relative w-full bg-white rounded-xl border-2 border-gray-300 p-3 sm:p-4 mb-4 shadow-2xs overflow-hidden">
+      <div className="relative w-full bg-white dark:bg-[#0E1420] rounded-xl border-2 border-gray-300 dark:border-white/30 p-3 sm:p-4 mb-4 shadow-2xs overflow-hidden transition-colors">
         <svg
           ref={svgRef}
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
@@ -240,23 +233,23 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
           <defs>
             {/* 90% Fan Gradient (Outer) */}
             <linearGradient id="fan90Grad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#00D26A" stopOpacity="0.08" />
-              <stop offset="50%" stopColor="#00D26A" stopOpacity="0.16" />
-              <stop offset="100%" stopColor="#00D26A" stopOpacity="0.12" />
+              <stop offset="0%" stopColor="#00D26A" stopOpacity="0.10" />
+              <stop offset="50%" stopColor="#00D26A" stopOpacity="0.18" />
+              <stop offset="100%" stopColor="#00D26A" stopOpacity="0.14" />
             </linearGradient>
 
             {/* 68% Fan Gradient (1-Sigma) */}
             <linearGradient id="fan68Grad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#00D26A" stopOpacity="0.18" />
-              <stop offset="50%" stopColor="#00D26A" stopOpacity="0.28" />
-              <stop offset="100%" stopColor="#00D26A" stopOpacity="0.22" />
+              <stop offset="0%" stopColor="#00D26A" stopOpacity="0.22" />
+              <stop offset="50%" stopColor="#00D26A" stopOpacity="0.32" />
+              <stop offset="100%" stopColor="#00D26A" stopOpacity="0.26" />
             </linearGradient>
 
             {/* 50% Fan Gradient (IQR Core) */}
             <linearGradient id="fan50Grad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#00D26A" stopOpacity="0.35" />
-              <stop offset="50%" stopColor="#00D26A" stopOpacity="0.48" />
-              <stop offset="100%" stopColor="#00D26A" stopOpacity="0.40" />
+              <stop offset="0%" stopColor="#00D26A" stopOpacity="0.40" />
+              <stop offset="50%" stopColor="#00D26A" stopOpacity="0.55" />
+              <stop offset="100%" stopColor="#00D26A" stopOpacity="0.45" />
             </linearGradient>
           </defs>
 
@@ -270,7 +263,8 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
                   y1={yPos}
                   x2={svgWidth - padding.right}
                   y2={yPos}
-                  stroke="#E5E7EB"
+                  stroke="currentColor"
+                  className="text-gray-200 dark:text-gray-800/80"
                   strokeWidth="1"
                   strokeDasharray={tick % 1 === 0 ? 'none' : '3 3'}
                 />
@@ -279,7 +273,8 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
                   y={yPos + 4}
                   textAnchor="end"
                   fontSize="11"
-                  fill="#374151"
+                  fill="currentColor"
+                  className="text-gray-700 dark:text-gray-400"
                   fontFamily="JetBrains Mono, monospace"
                   fontWeight="bold"
                 >
@@ -299,7 +294,8 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
                 y1={padding.top}
                 x2={xPos}
                 y2={padding.top + graphHeight}
-                stroke="#F3F4F6"
+                stroke="currentColor"
+                className="text-gray-100 dark:text-gray-800/50"
                 strokeWidth="1.5"
                 strokeDasharray="2 2"
               />
@@ -340,7 +336,7 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
               <path
                 d={pathCmeLine}
                 fill="none"
-                stroke="#8B5CF6"
+                stroke="#A855F7"
                 strokeWidth="2"
                 strokeDasharray="3 3"
                 strokeLinecap="round"
@@ -378,8 +374,8 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
                           cx={jitterX}
                           cy={dotY}
                           r="3.5"
-                          fill="#0284C7"
-                          fillOpacity="0.85"
+                          fill="#38BDF8"
+                          fillOpacity="0.9"
                           stroke="#FFFFFF"
                           strokeWidth="1"
                         />
@@ -391,7 +387,7 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
                       <g transform={`translate(${cx}, ${scaleY(m.fomcMedian)})`}>
                         <polygon
                           points="0,-6 6,0 0,6 -6,0"
-                          fill="#0284C7"
+                          fill="#38BDF8"
                           stroke="#FFFFFF"
                           strokeWidth="1.5"
                         />
@@ -407,10 +403,11 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
           <path
             d={pathExpectedLine}
             fill="none"
-            stroke="#008A45"
+            stroke="#00D26A"
             strokeWidth="3.5"
             strokeLinecap="round"
             strokeLinejoin="round"
+            className="dark:drop-shadow-[0_0_8px_rgba(0,210,106,0.5)]"
           />
 
           {/* Meeting Nodes & Hitboxes */}
@@ -443,7 +440,8 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
                     y1={padding.top}
                     x2={cx}
                     y2={padding.top + graphHeight}
-                    stroke="#111827"
+                    stroke="currentColor"
+                    className="text-gray-900 dark:text-gray-100"
                     strokeWidth="1.5"
                     strokeDasharray="2 2"
                     opacity="0.8"
@@ -455,7 +453,7 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
                   cx={cx}
                   cy={cy}
                   r={isHovered ? 7.5 : 5.5}
-                  fill={isHovered ? '#008A45' : '#00D26A'}
+                  fill={isHovered ? '#00D26A' : '#00A854'}
                   stroke="#FFFFFF"
                   strokeWidth="2.5"
                   className="transition-all duration-150 shadow-sm"
@@ -468,9 +466,9 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
                   textAnchor="middle"
                   fontSize="11"
                   fontWeight="bold"
-                  fill="#111827"
+                  fill="currentColor"
+                  className="text-gray-950 dark:text-white drop-shadow-xs"
                   fontFamily="JetBrains Mono, monospace"
-                  className="drop-shadow-xs"
                 >
                   {m.expectedRate.toFixed(2)}%
                 </text>
@@ -484,7 +482,8 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
             y1={padding.top + graphHeight}
             x2={svgWidth - padding.right}
             y2={padding.top + graphHeight}
-            stroke="#9CA3AF"
+            stroke="currentColor"
+            className="text-gray-400 dark:text-gray-600"
             strokeWidth="1.5"
           />
           {ratePath.map((m, i) => {
@@ -503,7 +502,8 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
                   y1={padding.top + graphHeight}
                   x2={cx}
                   y2={padding.top + graphHeight + 6}
-                  stroke="#6B7280"
+                  stroke="currentColor"
+                  className="text-gray-500 dark:text-gray-500"
                   strokeWidth="1.5"
                 />
                 <text
@@ -512,7 +512,8 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
                   textAnchor="middle"
                   fontSize="11"
                   fontWeight={isSelected ? '900' : 'bold'}
-                  fill={isSelected ? '#008A45' : '#374151'}
+                  fill="currentColor"
+                  className={isSelected ? 'text-[#008A45] dark:text-[#00E676]' : 'text-gray-700 dark:text-gray-300'}
                   fontFamily="JetBrains Mono, monospace"
                 >
                   {m.label}
@@ -523,7 +524,8 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
                   textAnchor="middle"
                   fontSize="10"
                   fontWeight="600"
-                  fill={isSelected ? '#008A45' : '#6B7280'}
+                  fill="currentColor"
+                  className={isSelected ? 'text-[#008A45] dark:text-[#00E676]' : 'text-gray-500 dark:text-gray-400'}
                   fontFamily="JetBrains Mono, monospace"
                 >
                   {m.cumulativeCutBps !== 0 ? `${m.cumulativeCutBps} bps` : 'Base'}
@@ -535,7 +537,7 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
 
         {/* Floating Callout Popover for Selected/Hovered Meeting */}
         {activeMeeting && (
-          <div className="mt-2 p-3.5 bg-gray-950 text-white rounded-xl border-2 border-gray-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in duration-100 font-sans">
+          <div className="mt-2 p-3.5 bg-gray-950 dark:bg-[#1A2332] text-white rounded-xl border-2 border-gray-800 dark:border-gray-700 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in duration-100 font-sans">
             {/* Left: Meeting Header & Expected Target */}
             <div>
               <div className="flex items-center gap-2">
@@ -564,15 +566,15 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
             {/* Middle: Policy Action Odds */}
             {!activeMeeting.isCurrent ? (
               <div className="flex items-center gap-3 text-xs font-mono">
-                <div className="p-2 rounded-lg bg-gray-900 border border-gray-800 text-center">
+                <div className="p-2 rounded-lg bg-gray-900 dark:bg-[#131924] border border-gray-800 dark:border-gray-700 text-center">
                   <div className="text-[10px] text-gray-400 font-bold uppercase">25bps Cut</div>
                   <div className="text-sm font-extrabold text-emerald-400">{activeMeeting.cutProbability25bps}%</div>
                 </div>
-                <div className="p-2 rounded-lg bg-gray-900 border border-gray-800 text-center">
+                <div className="p-2 rounded-lg bg-gray-900 dark:bg-[#131924] border border-gray-800 dark:border-gray-700 text-center">
                   <div className="text-[10px] text-gray-400 font-bold uppercase">50bps Cut</div>
                   <div className="text-sm font-extrabold text-teal-400">{activeMeeting.cutProbability50bps}%</div>
                 </div>
-                <div className="p-2 rounded-lg bg-gray-900 border border-gray-800 text-center">
+                <div className="p-2 rounded-lg bg-gray-900 dark:bg-[#131924] border border-gray-800 dark:border-gray-700 text-center">
                   <div className="text-[10px] text-gray-400 font-bold uppercase">Hold / Pause</div>
                   <div className="text-sm font-extrabold text-amber-400">{activeMeeting.pauseProbability}%</div>
                 </div>
@@ -603,9 +605,9 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
       </div>
 
       {/* Control Toggles & Legend Bar */}
-      <div className="p-3.5 bg-gray-50/90 rounded-xl border-2 border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="p-3.5 bg-gray-50/90 dark:bg-[#1A2332] rounded-xl border-2 border-gray-200 dark:border-white/30 flex flex-col md:flex-row md:items-center justify-between gap-3 transition-colors">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-extrabold uppercase tracking-wider text-gray-600 mr-1">
+          <span className="text-xs font-extrabold uppercase tracking-wider text-gray-600 dark:text-gray-400 mr-1">
             Overlays:
           </span>
 
@@ -614,11 +616,11 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
             onClick={() => setShowFanRibbons(!showFanRibbons)}
             className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg border-2 transition-all cursor-pointer ${
               showFanRibbons
-                ? 'bg-emerald-50 text-emerald-950 border-emerald-500 shadow-2xs'
-                : 'bg-white text-gray-400 border-gray-300 opacity-60 line-through'
+                ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-300 border-emerald-500 shadow-2xs'
+                : 'bg-white dark:bg-[#131924] text-gray-400 dark:text-gray-500 border-gray-300 dark:border-white/30 opacity-60 line-through'
             }`}
           >
-            <span className={`w-3 h-3 rounded ${showFanRibbons ? 'bg-[#00D26A]' : 'bg-gray-300'}`}></span>
+            <span className={`w-3 h-3 rounded ${showFanRibbons ? 'bg-[#00D26A]' : 'bg-gray-300 dark:bg-gray-600'}`}></span>
             <span>50%/68%/90% Confidence Fan</span>
           </button>
 
@@ -627,11 +629,11 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
             onClick={() => setShowFomcDots(!showFomcDots)}
             className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg border-2 transition-all cursor-pointer ${
               showFomcDots
-                ? 'bg-sky-50 text-sky-950 border-sky-500 shadow-2xs'
-                : 'bg-white text-gray-400 border-gray-300 opacity-60 line-through'
+                ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-950 dark:text-sky-300 border-sky-500 shadow-2xs'
+                : 'bg-white dark:bg-[#131924] text-gray-400 dark:text-gray-500 border-gray-300 dark:border-white/30 opacity-60 line-through'
             }`}
           >
-            <span className={`w-2.5 h-2.5 rounded-full ${showFomcDots ? 'bg-sky-600' : 'bg-gray-300'}`}></span>
+            <span className={`w-2.5 h-2.5 rounded-full ${showFomcDots ? 'bg-sky-500' : 'bg-gray-300 dark:bg-gray-600'}`}></span>
             <span>FOMC SEP Dot Plot</span>
           </button>
 
@@ -640,11 +642,11 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
             onClick={() => setShowPriorMonth(!showPriorMonth)}
             className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg border-2 transition-all cursor-pointer ${
               showPriorMonth
-                ? 'bg-amber-50 text-amber-950 border-amber-500 shadow-2xs'
-                : 'bg-white text-gray-400 border-gray-300 opacity-60 line-through'
+                ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-950 dark:text-amber-300 border-amber-500 shadow-2xs'
+                : 'bg-white dark:bg-[#131924] text-gray-400 dark:text-gray-500 border-gray-300 dark:border-white/30 opacity-60 line-through'
             }`}
           >
-            <span className={`w-3 h-0.5 border-t-2 border-dashed ${showPriorMonth ? 'border-amber-600' : 'border-gray-300'}`}></span>
+            <span className={`w-3 h-0.5 border-t-2 border-dashed ${showPriorMonth ? 'border-amber-500' : 'border-gray-300 dark:border-gray-600'}`}></span>
             <span>1-Mo Ago Trajectory</span>
           </button>
 
@@ -653,18 +655,18 @@ export const FedRatePathFanChart: React.FC<FedRatePathFanChartProps> = ({
             onClick={() => setShowCmePath(!showCmePath)}
             className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg border-2 transition-all cursor-pointer ${
               showCmePath
-                ? 'bg-purple-50 text-purple-950 border-purple-500 shadow-2xs'
-                : 'bg-white text-gray-400 border-gray-300 opacity-60 line-through'
+                ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-950 dark:text-purple-300 border-purple-500 shadow-2xs'
+                : 'bg-white dark:bg-[#131924] text-gray-400 dark:text-gray-500 border-gray-300 dark:border-white/30 opacity-60 line-through'
             }`}
           >
-            <span className={`w-3 h-0.5 border-t-2 border-dotted ${showCmePath ? 'border-purple-600' : 'border-gray-300'}`}></span>
+            <span className={`w-3 h-0.5 border-t-2 border-dotted ${showCmePath ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'}`}></span>
             <span>CME SOFR Futures</span>
           </button>
         </div>
 
         {/* Summary Stat */}
-        <div className="font-mono text-xs text-gray-800 font-bold shrink-0">
-          Terminal Rate Easing: <span className="text-[#008A45]">-{totalEasingBps} bps</span> by {finalMeeting?.label}
+        <div className="font-mono text-xs text-gray-800 dark:text-gray-300 font-bold shrink-0">
+          Terminal Rate Easing: <span className="text-[#008A45] dark:text-[#00E676]">-{totalEasingBps} bps</span> by {finalMeeting?.label}
         </div>
       </div>
     </div>

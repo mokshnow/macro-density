@@ -498,23 +498,23 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-black shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-6">
+    <div className="bg-white dark:bg-[#131924] rounded-2xl border-2 border-black dark:border-white shadow-md shadow-gray-900/5 p-5 sm:p-6 mb-6 transition-colors">
       {/* Header Controls Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b-2 border-gray-300">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b-2 border-gray-300 dark:border-white/30">
         <div>
-          <h2 className="text-base font-extrabold text-gray-950 tracking-tight">
+          <h2 className="text-base font-extrabold text-gray-950 dark:text-white tracking-tight">
             Market-Implied Distribution
           </h2>
         </div>
 
         {/* View Mode Toggle Buttons */}
-        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl border-2 border-gray-300 flex-wrap">
+        <div className="flex items-center gap-1 bg-gray-100 dark:bg-[#1A2332] p-1 rounded-xl border-2 border-gray-300 dark:border-white/30 flex-wrap">
           <button
             onClick={() => setViewMode('smooth_pdf')}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               viewMode === 'smooth_pdf'
-                ? 'bg-white text-gray-950 shadow-xs border border-gray-300'
-                : 'text-gray-600 hover:text-gray-950'
+                ? 'bg-white dark:bg-[#131924] text-gray-950 dark:text-white shadow-xs border border-gray-300 dark:border-white/40'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-950 dark:hover:text-white'
             }`}
           >
             <TrendingUp className="w-3.5 h-3.5 text-[#00D26A]" />
@@ -525,8 +525,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
             onClick={() => setViewMode('discrete_pmf')}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               viewMode === 'discrete_pmf'
-                ? 'bg-white text-gray-950 shadow-xs border border-gray-300'
-                : 'text-gray-600 hover:text-gray-950'
+                ? 'bg-white dark:bg-[#131924] text-gray-950 dark:text-white shadow-xs border border-gray-300 dark:border-white/40'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-950 dark:hover:text-white'
             }`}
           >
             <BarChart2 className="w-3.5 h-3.5 text-[#00D26A]" />
@@ -537,8 +537,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
             onClick={() => setViewMode('cumulative_cdf')}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               viewMode === 'cumulative_cdf'
-                ? 'bg-white text-gray-950 shadow-xs border border-gray-300'
-                : 'text-gray-600 hover:text-gray-950'
+                ? 'bg-white dark:bg-[#131924] text-gray-950 dark:text-white shadow-xs border border-gray-300 dark:border-white/40'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-950 dark:hover:text-white'
             }`}
           >
             <Layers className="w-3.5 h-3.5 text-[#00D26A]" />
@@ -549,11 +549,11 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
             onClick={() => setViewMode('options_compare')}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               viewMode === 'options_compare'
-                ? 'bg-white text-gray-950 shadow-xs border border-gray-300'
-                : 'text-gray-600 hover:text-gray-950'
+                ? 'bg-white dark:bg-[#131924] text-gray-950 dark:text-white shadow-xs border border-gray-300 dark:border-white/40'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-950 dark:hover:text-white'
             }`}
           >
-            <GitCommit className="w-3.5 h-3.5 text-indigo-600" />
+            <GitCommit className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
             <span>vs. Options</span>
           </button>
 
@@ -561,19 +561,20 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
             onClick={() => setViewMode('historical_shift')}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               viewMode === 'historical_shift'
-                ? 'bg-white text-gray-950 shadow-xs border border-gray-300'
-                : 'text-gray-600 hover:text-gray-950'
+                ? 'bg-white dark:bg-[#131924] text-gray-950 dark:text-white shadow-xs border border-gray-300 dark:border-white/40'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-950 dark:hover:text-white'
             }`}
           >
-            <History className="w-3.5 h-3.5 text-amber-600" />
+            <History className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             <span>History</span>
           </button>
         </div>
       </div>
 
       {/* Main SVG Graph Container */}
-      <div className="relative w-full overflow-hidden my-3">
+      <div className="relative w-full bg-white dark:bg-[#0E1420] rounded-xl border-2 border-gray-300 dark:border-white/30 p-3 sm:p-4 my-3 overflow-hidden transition-colors shadow-2xs">
         <svg
+
 
           ref={svgRef}
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
@@ -613,7 +614,6 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
           {/* Grid lines (Horizontal) */}
           {viewMode !== 'historical_shift' ? (
             [0, 25, 50, 75, 100].map((level) => {
-
               const yPos = scaleYDensity(level);
               return (
                 <g key={`grid-${level}`}>
@@ -622,7 +622,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     y1={yPos}
                     x2={svgWidth - padding.right}
                     y2={yPos}
-                    stroke="#E5E7EB"
+                    stroke="currentColor"
+                    className="text-gray-200 dark:text-gray-800/80"
                     strokeWidth="1"
                     strokeDasharray={level === 0 ? 'none' : '3 3'}
                   />
@@ -631,7 +632,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     y={yPos + 3}
                     textAnchor="end"
                     fontSize="11"
-                    fill="#374151"
+                    fill="currentColor"
+                    className="text-gray-700 dark:text-gray-400"
                     fontFamily="JetBrains Mono, monospace"
                     fontWeight="bold"
                   >
@@ -652,7 +654,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     y1={yPos}
                     x2={svgWidth - padding.right}
                     y2={yPos}
-                    stroke="#E5E7EB"
+                    stroke="currentColor"
+                    className="text-gray-200 dark:text-gray-800/80"
                     strokeWidth="1"
                     strokeDasharray={idx === 0 ? 'none' : '3 3'}
                   />
@@ -661,7 +664,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     y={yPos + 3}
                     textAnchor="end"
                     fontSize="11"
-                    fill="#374151"
+                    fill="currentColor"
+                    className="text-gray-700 dark:text-gray-400"
                     fontFamily="JetBrains Mono, monospace"
                     fontWeight="bold"
                   >
@@ -696,9 +700,9 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                       width={barWidth}
                       height={barHeight}
                       rx="4"
-                      fill={bin.isMode ? '#00D26A' : bin.isTail ? '#FB7185' : isHovered ? '#10B981' : '#E5E7EB'}
-                      fillOpacity={bin.isMode ? 0.9 : isHovered ? 0.8 : 0.65}
-                      stroke={bin.isMode ? '#008A45' : isHovered ? '#059669' : '#9CA3AF'}
+                      fill={bin.isMode ? '#00D26A' : bin.isTail ? '#FB7185' : isHovered ? '#10B981' : '#94A3B8'}
+                      fillOpacity={bin.isMode ? 0.9 : isHovered ? 0.8 : 0.45}
+                      stroke={bin.isMode ? '#008A45' : isHovered ? '#059669' : '#64748B'}
                       strokeWidth="2"
                     />
 
@@ -709,20 +713,22 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                       textAnchor="middle"
                       fontSize="11"
                       fontWeight="bold"
-                      fill={bin.isMode ? '#008A45' : '#111827'}
+                      fill="currentColor"
+                      className={bin.isMode ? 'text-[#008A45] dark:text-[#00E676]' : 'text-gray-900 dark:text-gray-200'}
                       fontFamily="JetBrains Mono, monospace"
                     >
                       {bin.probability}%
                     </text>
 
-                    {/* Range Label (Horizontal for tails, vertical stacked for intervals) */}
+                    {/* Range Label */}
                     <text
                       x={centerX}
                       y={bin.isTail ? padding.top + graphHeight + 24 : padding.top + graphHeight + 16}
                       textAnchor="middle"
                       fontSize="11"
                       fontWeight="bold"
-                      fill="#374151"
+                      fill="currentColor"
+                      className="text-gray-700 dark:text-gray-300"
                       fontFamily="JetBrains Mono, monospace"
                     >
                       {bin.isTail ? (
@@ -762,6 +768,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                className="dark:drop-shadow-[0_0_8px_rgba(0,210,106,0.4)]"
               />
 
               {/* Lower Bound X Cutoff Pin Line */}
@@ -774,7 +781,6 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     setDragTarget(intervalX <= intervalY ? 'x' : 'y');
                   }}
                 >
-                  {/* Invisible wide hitbox for easy clicking & dragging */}
                   <line
                     x1={scaleX(Math.min(intervalX, intervalY))}
                     y1={padding.top - 20}
@@ -789,7 +795,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     y1={padding.top}
                     x2={scaleX(Math.min(intervalX, intervalY))}
                     y2={padding.top + graphHeight}
-                    stroke="#008A45"
+                    stroke="#00A854"
                     strokeWidth="2.5"
                   />
                   <rect
@@ -798,7 +804,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     width="44"
                     height="18"
                     rx="4"
-                    fill="#008A45"
+                    fill="#00A854"
                     filter="drop-shadow(0 1px 2px rgba(0,0,0,0.15))"
                   />
                   <text
@@ -825,7 +831,6 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     setDragTarget(intervalX <= intervalY ? 'y' : 'x');
                   }}
                 >
-                  {/* Invisible wide hitbox for easy clicking & dragging */}
                   <line
                     x1={scaleX(Math.max(intervalX, intervalY))}
                     y1={padding.top - 20}
@@ -840,7 +845,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     y1={padding.top}
                     x2={scaleX(Math.max(intervalX, intervalY))}
                     y2={padding.top + graphHeight}
-                    stroke="#008A45"
+                    stroke="#00A854"
                     strokeWidth="2.5"
                   />
                   <rect
@@ -849,7 +854,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     width="44"
                     height="18"
                     rx="4"
-                    fill="#008A45"
+                    fill="#00A854"
                     filter="drop-shadow(0 1px 2px rgba(0,0,0,0.15))"
                   />
                   <text
@@ -873,7 +878,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                   y1={padding.top - 22}
                   x2={scaleX(moments.mean)}
                   y2={padding.top + graphHeight}
-                  stroke="#111827"
+                  stroke="currentColor"
+                  className="text-gray-900 dark:text-gray-200"
                   strokeWidth="2"
                   strokeDasharray="2 2"
                   opacity="0.8"
@@ -886,13 +892,13 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                   y1={padding.top}
                   x2={scaleX(consensusVal)}
                   y2={padding.top + graphHeight}
-                  stroke="#0284C7"
+                  stroke="#38BDF8"
                   strokeWidth="2"
                   strokeDasharray="4 4"
                 />
               )}
 
-              {/* Badges rendered in foreground (Consensus in front of E[X] line) */}
+              {/* Badges */}
               {showMeanPin && (
                 <g transform={`translate(${scaleX(moments.mean)}, ${padding.top - 31})`}>
                   <rect
@@ -902,6 +908,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     height="18"
                     rx="4"
                     fill="#111827"
+                    className="dark:fill-gray-800"
                   />
                   <text
                     x="0"
@@ -916,7 +923,6 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                   </text>
                 </g>
               )}
-
 
               {showConsensusPin && consensusVal !== null && (
                 <g transform={`translate(${scaleX(consensusVal)}, ${padding.top - 10})`}>
@@ -947,7 +953,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                 <path
                   d={bsPathData}
                   fill="none"
-                  stroke="#6366F1"
+                  stroke="#818CF8"
                   strokeWidth="2.5"
                   strokeDasharray="5 5"
                 />
@@ -1038,7 +1044,6 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                 const cy = scaleHistY(p.mean);
                 return (
                   <g key={`hist-node-${p.idx}`}>
-                    {/* Uncertainty Vertical Bar */}
                     {showHistBand && (
                       <line
                         x1={cx}
@@ -1047,11 +1052,10 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                         y2={scaleHistY(p.upper)}
                         stroke="#008A45"
                         strokeWidth="2"
-                        opacity="0.3"
+                        opacity="0.4"
                       />
                     )}
 
-                    {/* Consensus point marker */}
                     {showHistConsensus && p.consensus !== undefined && (
                       <rect
                         x={cx - 3.5}
@@ -1064,7 +1068,6 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                       />
                     )}
 
-                    {/* Mean node */}
                     {showHistMean && (
                       <>
                         <circle
@@ -1081,7 +1084,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                           textAnchor="middle"
                           fontSize="11.5"
                           fontWeight="800"
-                          fill="#09090B"
+                          fill="currentColor"
+                          className="text-gray-950 dark:text-white"
                           fontFamily="JetBrains Mono, monospace"
                         >
                           {p.mean.toFixed(2)}{market.unitSuffix}
@@ -1097,24 +1101,22 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
           {/* Interactive Hairline Cursor Overlay */}
           {hoverCursor && viewMode !== 'historical_shift' && (
             <g pointerEvents="none">
-              {/* Vertical Hairline */}
               <line
                 x1={hoverCursor.svgX}
                 y1={padding.top}
                 x2={hoverCursor.svgX}
                 y2={padding.top + graphHeight}
-                stroke="#111827"
+                stroke="currentColor"
+                className="text-gray-900 dark:text-gray-100"
                 strokeWidth="1.5"
                 strokeDasharray="2 2"
                 opacity="0.75"
               />
-
-              {/* Snapping Pulse Circle on the Curve */}
               <circle
                 cx={hoverCursor.svgX}
                 cy={hoverCursor.svgY}
                 r="5.5"
-                fill="#111827"
+                fill="#00D26A"
                 stroke="#FFFFFF"
                 strokeWidth="2"
               />
@@ -1127,7 +1129,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
             y1={padding.top + graphHeight}
             x2={svgWidth - padding.right}
             y2={padding.top + graphHeight}
-            stroke="#9CA3AF"
+            stroke="currentColor"
+            className="text-gray-400 dark:text-gray-600"
             strokeWidth="1.5"
           />
 
@@ -1141,7 +1144,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                       y1={padding.top + graphHeight}
                       x2={cx}
                       y2={padding.top + graphHeight + 5}
-                      stroke="#6B7280"
+                      stroke="currentColor"
+                      className="text-gray-500 dark:text-gray-500"
                       strokeWidth="1.5"
                     />
                     <text
@@ -1149,7 +1153,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                       y={padding.top + graphHeight + 18}
                       textAnchor="middle"
                       fontSize="11"
-                      fill="#374151"
+                      fill="currentColor"
+                      className="text-gray-700 dark:text-gray-300"
                       fontWeight="bold"
                       fontFamily="JetBrains Mono, monospace"
                     >
@@ -1169,7 +1174,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     y1={padding.top + graphHeight}
                     x2={centerX}
                     y2={padding.top + graphHeight + 5}
-                    stroke="#6B7280"
+                    stroke="currentColor"
+                    className="text-gray-500 dark:text-gray-500"
                     strokeWidth="1.5"
                   />
                 );
@@ -1184,7 +1190,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                       y1={padding.top + graphHeight}
                       x2={xPos}
                       y2={padding.top + graphHeight + 5}
-                      stroke="#6B7280"
+                      stroke="currentColor"
+                      className="text-gray-500 dark:text-gray-500"
                       strokeWidth="1.5"
                     />
                     <text
@@ -1192,7 +1199,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                       y={padding.top + graphHeight + 18}
                       textAnchor="middle"
                       fontSize="11"
-                      fill="#374151"
+                      fill="currentColor"
+                      className="text-gray-700 dark:text-gray-300"
                       fontWeight="bold"
                       fontFamily="JetBrains Mono, monospace"
                     >
@@ -1206,7 +1214,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
         {/* Dynamic Hairline Tooltip Callout */}
         {hoverCursor && viewMode !== 'historical_shift' && (
           <div
-            className="absolute z-20 pointer-events-none bg-gray-950 text-white px-3 py-2 rounded-xl text-xs shadow-xl border-2 border-gray-700 font-mono transition-transform duration-75"
+            className="absolute z-20 pointer-events-none bg-gray-950 dark:bg-[#1A2332] text-white px-3 py-2 rounded-xl text-xs shadow-xl border-2 border-gray-700 dark:border-gray-600 font-mono transition-transform duration-75"
             style={{
               left: `${(hoverCursor.svgX / svgWidth) * 100}%`,
               top: `${Math.max(10, ((hoverCursor.svgY - 20) / svgHeight) * 100)}%`,
@@ -1226,7 +1234,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
 
         {/* Hover Callout for Discrete Bins */}
         {hoveredBin && viewMode === 'discrete_pmf' && !hoverCursor && (
-          <div className="absolute top-3 right-3 bg-gray-900 text-white px-3 py-2 rounded-xl text-xs shadow-lg animate-fade-in pointer-events-none border-2 border-gray-700">
+          <div className="absolute top-3 right-3 bg-gray-900 dark:bg-[#1A2332] text-white px-3 py-2 rounded-xl text-xs shadow-lg animate-fade-in pointer-events-none border-2 border-gray-700 dark:border-gray-600">
             <div className="font-semibold text-emerald-400">{hoveredBin.label}</div>
             <div className="flex items-center gap-2 mt-0.5 font-mono">
               <span>Mass: <strong>{hoveredBin.probability}%</strong></span>
@@ -1238,23 +1246,23 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
       </div>
 
       {/* Interactive Probability Range [X, Y] Controls & Legend */}
-      <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col gap-4 bg-gray-50/80 p-4 rounded-xl border-2 border-gray-200">
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-white/20 flex flex-col gap-4 bg-gray-50/80 dark:bg-[#1A2332] p-4 rounded-xl border-2 border-gray-200 dark:border-white/30">
         {viewMode === 'historical_shift' ? (
           /* Historical Revision Tracker Summary */
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-xl border-2 border-gray-300 shadow-2xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#131924] p-3 rounded-xl border-2 border-gray-300 dark:border-white/30 shadow-2xs">
             <div className="flex items-center gap-3 flex-wrap">
               <div>
-                <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider block">
+                <span className="text-[11px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block">
                   Forecast Shift ({histPoints[0].timestamp} → {histPoints[histPoints.length - 1].timestamp})
                 </span>
-                <div className="text-sm font-extrabold font-mono text-gray-950 flex items-center gap-2 mt-0.5">
+                <div className="text-sm font-extrabold font-mono text-gray-950 dark:text-white flex items-center gap-2 mt-0.5">
                   <span>{histPoints[0].mean.toFixed(2)}{market.unitSuffix}</span>
                   <span className="text-gray-400">→</span>
-                  <span className="text-[#008A45]">{histPoints[histPoints.length - 1].mean.toFixed(2)}{market.unitSuffix}</span>
+                  <span className="text-[#008A45] dark:text-[#00E676]">{histPoints[histPoints.length - 1].mean.toFixed(2)}{market.unitSuffix}</span>
                   <span className={`text-xs px-1.5 py-0.2 rounded border font-bold ${
                     histPoints[histPoints.length - 1].mean >= histPoints[0].mean
-                      ? 'text-amber-800 bg-amber-50 border-amber-300'
-                      : 'text-emerald-800 bg-emerald-50 border-emerald-300'
+                      ? 'text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700/60'
+                      : 'text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700/60'
                   }`}>
                     {histPoints[histPoints.length - 1].mean >= histPoints[0].mean ? '+' : ''}
                     {((histPoints[histPoints.length - 1].mean - histPoints[0].mean) * 100).toFixed(0)} bps
@@ -1263,18 +1271,18 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
               </div>
             </div>
 
-            <div className="font-mono text-xs text-gray-700 shrink-0">
+            <div className="font-mono text-xs text-gray-700 dark:text-gray-300 shrink-0">
               <span>Uncertainty: <strong>±{histPoints[histPoints.length - 1].stdDev.toFixed(2)}{market.unitSuffix}</strong> (vs. ±{histPoints[0].stdDev.toFixed(2)}{market.unitSuffix} initially)</span>
             </div>
           </div>
         ) : viewMode !== 'cumulative_cdf' ? (
           /* PDF Mode: Interval [X, Y] Evaluation and Mass on the SAME LINE */
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white p-3 rounded-xl border-2 border-gray-300 shadow-2xs">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white dark:bg-[#131924] p-3 rounded-xl border-2 border-gray-300 dark:border-white/30 shadow-2xs">
             {/* Left: Inputs */}
             <div className="flex items-center gap-3 flex-wrap">
               {/* Input X (Lower Bound) */}
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-gray-800">Lower Bound (X):</span>
+                <span className="text-xs font-bold text-gray-800 dark:text-gray-200">Lower Bound (X):</span>
                 <div className="flex items-center gap-1">
                   <input
                     type="text"
@@ -1283,17 +1291,17 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     onChange={(e) => handleXChange(e.target.value)}
                     onBlur={handleXBlur}
                     placeholder="X"
-                    className="w-20 px-2 py-1 text-center font-mono font-bold text-xs text-gray-950 bg-gray-50 border-2 border-gray-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
+                    className="w-20 px-2 py-1 text-center font-mono font-bold text-xs text-gray-950 dark:text-white bg-gray-50 dark:bg-[#1A2332] border-2 border-gray-300 dark:border-white/40 rounded-lg focus:bg-white dark:focus:bg-[#202B3D] focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
                   />
-                  <span className="text-gray-700 font-mono text-xs font-bold">{market.unitSuffix}</span>
+                  <span className="text-gray-700 dark:text-gray-300 font-mono text-xs font-bold">{market.unitSuffix}</span>
                 </div>
               </div>
 
-              <span className="text-gray-400 font-black text-xs">to</span>
+              <span className="text-gray-400 dark:text-gray-500 font-black text-xs">to</span>
 
               {/* Input Y (Upper Bound) */}
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-gray-800">Upper Bound (Y):</span>
+                <span className="text-xs font-bold text-gray-800 dark:text-gray-200">Upper Bound (Y):</span>
                 <div className="flex items-center gap-1">
                   <input
                     type="text"
@@ -1302,27 +1310,27 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     onChange={(e) => handleYChange(e.target.value)}
                     onBlur={handleYBlur}
                     placeholder="Y"
-                    className="w-20 px-2 py-1 text-center font-mono font-bold text-xs text-gray-950 bg-gray-50 border-2 border-gray-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
+                    className="w-20 px-2 py-1 text-center font-mono font-bold text-xs text-gray-950 dark:text-white bg-gray-50 dark:bg-[#1A2332] border-2 border-gray-300 dark:border-white/40 rounded-lg focus:bg-white dark:focus:bg-[#202B3D] focus:outline-none focus:ring-2 focus:ring-[#00D26A]/30 focus:border-[#00D26A]"
                   />
-                  <span className="text-gray-700 font-mono text-xs font-bold">{market.unitSuffix}</span>
+                  <span className="text-gray-700 dark:text-gray-300 font-mono text-xs font-bold">{market.unitSuffix}</span>
                 </div>
               </div>
             </div>
 
             {/* Right: Harmoniously sized Probability Mass Statement */}
-            <div className="font-mono font-bold text-xs sm:text-sm text-gray-950 flex items-center gap-1.5 flex-wrap shrink-0">
+            <div className="font-mono font-bold text-xs sm:text-sm text-gray-950 dark:text-white flex items-center gap-1.5 flex-wrap shrink-0">
               <span>P({Math.min(intervalX, intervalY).toFixed(2)}{market.unitSuffix} ≤ Outcome ≤ {Math.max(intervalX, intervalY).toFixed(2)}{market.unitSuffix}) =</span>
-              <span className="text-[#008A45] bg-[#F0FDF4] px-2.5 py-0.5 rounded-lg border-2 border-[#86EFAC] text-xs sm:text-sm font-black shadow-2xs">
+              <span className="text-[#008A45] dark:text-[#00E676] bg-[#F0FDF4] dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-lg border-2 border-[#86EFAC] dark:border-emerald-700/60 text-xs sm:text-sm font-black shadow-2xs">
                 {intervalProbability}%
               </span>
             </div>
           </div>
         ) : (
           /* CDF Mode: Cumulative Threshold Evaluation and Value on the SAME LINE */
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-xl border-2 border-gray-300 shadow-2xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#131924] p-3 rounded-xl border-2 border-gray-300 dark:border-white/30 shadow-2xs">
             {/* Left: Input */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-gray-800">Threshold (X):</span>
+              <span className="text-xs font-bold text-gray-800 dark:text-gray-200">Threshold (X):</span>
               <div className="flex items-center gap-1">
                 <input
                   type="text"
@@ -1331,16 +1339,16 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                   onChange={(e) => handleCdfChange(e.target.value)}
                   onBlur={handleCdfBlur}
                   placeholder="X"
-                  className="w-20 px-2 py-1 text-center font-mono font-bold text-xs text-gray-950 bg-gray-50 border-2 border-gray-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0284C7]/30 focus:border-[#0284C7]"
+                  className="w-20 px-2 py-1 text-center font-mono font-bold text-xs text-gray-950 dark:text-white bg-gray-50 dark:bg-[#1A2332] border-2 border-gray-300 dark:border-white/40 rounded-lg focus:bg-white dark:focus:bg-[#202B3D] focus:outline-none focus:ring-2 focus:ring-[#0284C7]/30 focus:border-[#0284C7]"
                 />
-                <span className="text-gray-700 font-mono text-xs font-bold">{market.unitSuffix}</span>
+                <span className="text-gray-700 dark:text-gray-300 font-mono text-xs font-bold">{market.unitSuffix}</span>
               </div>
             </div>
 
             {/* Right: Resulting CDF equation */}
-            <div className="font-mono font-bold text-xs sm:text-sm text-gray-950 flex items-center gap-1.5 shrink-0">
+            <div className="font-mono font-bold text-xs sm:text-sm text-gray-950 dark:text-white flex items-center gap-1.5 shrink-0">
               <span>P(Outcome ≤ {cdfThreshold.toFixed(2)}{market.unitSuffix}) =</span>
-              <span className="text-[#0284C7] bg-sky-50 px-2.5 py-0.5 rounded-lg border-2 border-sky-300 text-xs sm:text-sm font-black shadow-2xs">
+              <span className="text-[#0284C7] dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2.5 py-0.5 rounded-lg border-2 border-sky-300 dark:border-sky-700/60 text-xs sm:text-sm font-black shadow-2xs">
                 {cdfProbValue}%
               </span>
             </div>
@@ -1348,11 +1356,11 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
         )}
 
         {/* Interactive Graph Line Legend & Visibility Selector */}
-        <div className="pt-3 border-t-2 border-gray-200">
+        <div className="pt-3 border-t-2 border-gray-200 dark:border-white/20">
           <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
               <span>Legend</span>
-              <span className="text-[10px] text-gray-400 font-normal">(click to toggle on/off)</span>
+              <span className="text-[10px] text-gray-400 dark:text-gray-500 font-normal">(click to toggle on/off)</span>
             </span>
           </div>
 
@@ -1364,8 +1372,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                   onClick={() => setShowHistMean(!showHistMean)}
                   className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border-2 text-xs font-bold transition-all cursor-pointer ${
                     showHistMean
-                      ? 'bg-emerald-50 text-emerald-950 border-emerald-500 shadow-2xs'
-                      : 'bg-gray-100 text-gray-400 border-gray-300 opacity-60 line-through'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-300 border-emerald-500 shadow-2xs'
+                      : 'bg-gray-100 dark:bg-[#131924] text-gray-400 dark:text-gray-500 border-gray-300 dark:border-white/30 opacity-60 line-through'
                   }`}
                 >
                   <span className={`w-3 h-1 rounded-full ${showHistMean ? 'bg-[#00D26A]' : 'bg-gray-400'}`}></span>
@@ -1377,11 +1385,11 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                   onClick={() => setShowHistBand(!showHistBand)}
                   className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border-2 text-xs font-bold transition-all cursor-pointer ${
                     showHistBand
-                      ? 'bg-emerald-50 text-emerald-950 border-emerald-500 shadow-2xs'
-                      : 'bg-gray-100 text-gray-400 border-gray-300 opacity-60 line-through'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-300 border-emerald-500 shadow-2xs'
+                      : 'bg-gray-100 dark:bg-[#131924] text-gray-400 dark:text-gray-500 border-gray-300 dark:border-white/30 opacity-60 line-through'
                   }`}
                 >
-                  <span className={`w-3 h-3 rounded ${showHistBand ? 'bg-[#00D26A]/30 border border-[#00D26A]' : 'bg-gray-300'}`}></span>
+                  <span className={`w-3 h-3 rounded ${showHistBand ? 'bg-[#00D26A]/30 border border-[#00D26A]' : 'bg-gray-300 dark:bg-gray-600'}`}></span>
                   <span>68% Uncertainty Band (±1σ)</span>
                 </button>
 
@@ -1390,11 +1398,11 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                   onClick={() => setShowHistConsensus(!showHistConsensus)}
                   className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border-2 text-xs font-bold transition-all cursor-pointer ${
                     showHistConsensus
-                      ? 'bg-sky-50 text-sky-950 border-sky-500 shadow-2xs'
-                      : 'bg-gray-100 text-gray-400 border-gray-300 opacity-60 line-through'
+                      ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-950 dark:text-sky-300 border-sky-500 shadow-2xs'
+                      : 'bg-gray-100 dark:bg-[#131924] text-gray-400 dark:text-gray-500 border-gray-300 dark:border-white/30 opacity-60 line-through'
                   }`}
                 >
-                  <span className={`w-3 h-0.5 border-t-2 border-dashed ${showHistConsensus ? 'border-sky-600' : 'border-gray-400'}`}></span>
+                  <span className={`w-3 h-0.5 border-t-2 border-dashed ${showHistConsensus ? 'border-sky-500' : 'border-gray-400 dark:border-gray-600'}`}></span>
                   <span>Consensus Benchmark</span>
                 </button>
               </>
@@ -1406,8 +1414,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                   onClick={() => setShowMeanPin(!showMeanPin)}
                   className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border-2 text-xs font-bold transition-all cursor-pointer ${
                     showMeanPin
-                      ? 'bg-gray-950 text-white border-gray-950 shadow-2xs'
-                      : 'bg-gray-100 text-gray-400 border-gray-300 opacity-60 line-through'
+                      ? 'bg-gray-950 dark:bg-gray-800 text-white border-gray-950 dark:border-white/40 shadow-2xs'
+                      : 'bg-gray-100 dark:bg-[#131924] text-gray-400 dark:text-gray-500 border-gray-300 dark:border-white/30 opacity-60 line-through'
                   }`}
                 >
                   <span className={`w-2.5 h-2.5 rounded-xs ${showMeanPin ? 'bg-white' : 'bg-gray-400'}`}></span>
@@ -1422,15 +1430,13 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border-2 text-xs font-bold transition-all cursor-pointer ${
                       showConsensusPin
                         ? 'bg-sky-600 text-white border-sky-600 shadow-2xs'
-                        : 'bg-gray-100 text-gray-400 border-gray-300 opacity-60 line-through'
+                        : 'bg-gray-100 dark:bg-[#131924] text-gray-400 dark:text-gray-500 border-gray-300 dark:border-white/30 opacity-60 line-through'
                     }`}
                   >
                     <span className={`w-2.5 h-2.5 rounded-xs ${showConsensusPin ? 'bg-white' : 'bg-gray-400'}`}></span>
                     <span>Consensus ({consensusVal}{market.unitSuffix})</span>
                   </button>
                 )}
-
-
 
                 {/* 4. Range Slice & Cutoff Pins (for PDF mode) */}
                 {viewMode === 'smooth_pdf' && (
@@ -1439,8 +1445,8 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     onClick={() => setShowIntervalSlice(!showIntervalSlice)}
                     className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border-2 text-xs font-bold transition-all cursor-pointer ${
                       showIntervalSlice
-                        ? 'bg-emerald-800 text-white border-emerald-800 shadow-2xs'
-                        : 'bg-gray-100 text-gray-400 border-gray-300 opacity-60 line-through'
+                        ? 'bg-emerald-800 dark:bg-emerald-900 text-white border-emerald-800 dark:border-emerald-700 shadow-2xs'
+                        : 'bg-gray-100 dark:bg-[#131924] text-gray-400 dark:text-gray-500 border-gray-300 dark:border-white/30 opacity-60 line-through'
                     }`}
                   >
                     <span className={`w-3 h-2 rounded-xs ${showIntervalSlice ? 'bg-[#00D26A]' : 'bg-gray-400'}`}></span>
@@ -1448,7 +1454,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                   </button>
                 )}
 
-                {/* 5. Black-Scholes vs Options (if in options_compare mode) */}
+                {/* 5. Black-Scholes vs Options */}
                 {viewMode === 'options_compare' && (
                   <button
                     type="button"
@@ -1456,7 +1462,7 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
                     className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border-2 text-xs font-bold transition-all cursor-pointer ${
                       showOptionsCurve
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
-                        : 'bg-gray-100 text-gray-400 border-gray-300 opacity-60 line-through'
+                        : 'bg-gray-100 dark:bg-[#131924] text-gray-400 dark:text-gray-500 border-gray-300 dark:border-white/30 opacity-60 line-through'
                     }`}
                   >
                     <span className={`w-3 h-0.5 border-t-2 border-dashed ${showOptionsCurve ? 'border-white' : 'border-gray-400'}`}></span>
@@ -1471,3 +1477,4 @@ export const DensityChart: React.FC<DensityChartProps> = ({ market }) => {
     </div>
   );
 };
+
