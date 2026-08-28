@@ -323,6 +323,36 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
     return `${stressCurvePath} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
   }, [stressCurvePath, curvePoints.stressPts]);
 
+  // Clean, evenly spaced X-axis ticks (5 to 7 ticks max with ample spacing)
+  const xAxisTicks = useMemo(() => {
+    if (bins.length === 0) return [];
+
+    const targetTickCount = 6;
+    const rawStep = rangeX / (targetTickCount - 1);
+
+    let niceStep = 0.1;
+    if (rawStep > 1.5) niceStep = 2.0;
+    else if (rawStep > 0.8) niceStep = 1.0;
+    else if (rawStep > 0.35) niceStep = 0.5;
+    else if (rawStep > 0.18) niceStep = 0.25;
+    else if (rawStep > 0.12) niceStep = 0.2;
+    else niceStep = 0.1;
+
+    const startTick = Math.ceil((minX - 0.0001) / niceStep) * niceStep;
+    const ticks: number[] = [];
+    for (let t = startTick; t <= maxX + 0.001; t += niceStep) {
+      ticks.push(Number(t.toFixed(2)));
+    }
+
+    if (ticks.length < 3) {
+      return [minX, (minX + maxX) / 2, maxX].map((v) => Number(v.toFixed(1)));
+    }
+    if (ticks.length > 8) {
+      return ticks.filter((_, idx) => idx % 2 === 0);
+    }
+    return ticks;
+  }, [bins, minX, maxX, rangeX]);
+
   // Mouse hover handler
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!svgRef.current) return;
@@ -690,30 +720,35 @@ export const StressTestCard: React.FC<StressTestCardProps> = ({ market }) => {
             className="text-gray-400 dark:text-gray-600"
             strokeWidth="1.5"
           />
-          {bins.map((b) => (
-            <g key={`stress-x-tick-${b.id}`}>
-              <line
-                x1={scaleX(b.midpoint)}
-                y1={padding.top + graphHeight}
-                x2={scaleX(b.midpoint)}
-                y2={padding.top + graphHeight + 4}
-                stroke="currentColor"
-                className="text-gray-400 dark:text-gray-600"
-              />
-              <text
-                x={scaleX(b.midpoint)}
-                y={padding.top + graphHeight + 16}
-                textAnchor="middle"
-                fontSize="10"
-                fill="currentColor"
-                className="text-gray-600 dark:text-gray-400"
-                fontWeight="bold"
-                fontFamily="JetBrains Mono, monospace"
-              >
-                {b.midpoint.toFixed(1)}{unitSuffix}
-              </text>
-            </g>
-          ))}
+          {xAxisTicks.map((tickVal) => {
+            const xPos = scaleX(tickVal);
+            if (xPos < padding.left - 2 || xPos > svgWidth - padding.right + 2) return null;
+            return (
+              <g key={`stress-xtick-${tickVal}`}>
+                <line
+                  x1={xPos}
+                  y1={padding.top + graphHeight}
+                  x2={xPos}
+                  y2={padding.top + graphHeight + 5}
+                  stroke="currentColor"
+                  className="text-gray-400 dark:text-gray-600"
+                  strokeWidth="1.5"
+                />
+                <text
+                  x={xPos}
+                  y={padding.top + graphHeight + 18}
+                  textAnchor="middle"
+                  fontSize="11"
+                  fill="currentColor"
+                  className="text-gray-600 dark:text-gray-400"
+                  fontWeight="bold"
+                  fontFamily="JetBrains Mono, monospace"
+                >
+                  {tickVal.toFixed(1)}{unitSuffix}
+                </text>
+              </g>
+            );
+          })}
         </svg>
 
         {/* Hover Crosshair Callout */}
